@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#FFFDF5" />
+<title>自律生活工作台</title>
+<!-- 唯一外部依赖：几何无衬线字体。断网时自动回退到系统中文栈，功能与排版不受影响。
+     若需完全离线，删掉下面 3 行即可。 -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* =========================================================================
+   Playful Geometric 设计系统 · Token 层
+   规则：业务代码只允许引用这里的变量，不写死色值/圆角/阴影。
+   改主色 = 改 --accent 一行；改强弱 = 调 --pop-* 系列。
+   ========================================================================= */
+:root{
+  /* —— 色彩（设计系统原始值）—— */
+  --bg:#FFFDF5;              /* 暖奶油纸感背景 */
+  --fg:#1E293B;              /* Slate 800，正文/描边/硬阴影 */
+  --muted:#F1F5F9;           /* Slate 100，静音底 */
+  --muted-fg:#64748B;        /* Slate 500，次要文字（AA 达标） */
+  --accent:#8B5CF6;          /* 紫罗兰：主行动色 */
+  --accent-fg:#FFFFFF;
+  --secondary:#F472B6;       /* 热粉：装饰/点缀 */
+  --tertiary:#FBBF24;        /* 琥珀：乐观/hover 填充 */
+  --quaternary:#34D399;      /* 薄荷：完成/成功 */
+  --border:#E2E8F0;          /* Slate 200，卡片硬阴影用的浅灰 */
+  --soft:#CBD5E1;            /* Slate 300，输入框静止描边 */
+  --input:#FFFFFF;
+  --card:#FFFFFF;
+  --ring:#8B5CF6;            /* 焦点环 */
+  /* —— 兼容别名（旧类名仍可工作）—— */
+  --ink:var(--fg);
+  --ink-2:#475569;
+  --ink-3:var(--muted-fg);
+  --blue:var(--accent);
+  --blue-d:#7C3AED;
+  --line:var(--border);
+  /* —— 圆角（混用全圆与利角，制造「叶子形」）—— */
+  --r-sm:10px; --r-md:16px; --r-lg:22px; --r:18px; --r-full:9999px;
+  /* —— 描边：默认粗 2px —— */
+  --bw:2px; --bw-thin:1.5px;
+  /* —— 硬阴影（零模糊，实色偏移）—— */
+  --pop:3px 3px 0 0 var(--fg);
+  --pop-sm:2px 2px 0 0 var(--fg);
+  --pop-lg:5px 5px 0 0 var(--fg);
+  --sticker:5px 5px 0 0 var(--border);
+  --sticker-sm:3px 3px 0 0 var(--border);
+  --shadow:5px 5px 0 0 var(--border);   /* 兼容旧引用 */
+  /* —— 动效：回弹曲线 —— */
+  --ease-pop:cubic-bezier(.34,1.56,.64,1);
+  --t-fast:.16s;
+  --t:.26s;
+}
+/* 换肤色只改上面 --accent / --ring 两个值即可，整套组件（按钮、进度条、图表、
+   焦点环、激活态）会同步。例如想回到偏冷的天空蓝：
+     --accent:#4B9FE1; --ring:#4B9FE1;
+   若整体都想要更冷的性格，再把 --secondary/--tertiary/--quaternary 换成
+   同色相的浅色档位即可。 */
+
+/* ===================== 基础 ===================== */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:"Plus Jakarta Sans","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  font-size:14px;
+  color:var(--fg);
+  background-color:var(--bg);
+  background-image:radial-gradient(var(--border) 1.15px,transparent 1.15px);
+  background-size:22px 22px;
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+button{font-family:inherit}
+h1,h2,h3,p,ul,li{margin:0;padding:0}
+::selection{background:var(--tertiary);color:var(--fg)}
+:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+
+/* 图标统一语言：2.5px 粗描边 + 圆头圆角，绝不裸放 */
+.ic{
+  width:18px;height:18px;flex:0 0 auto;display:inline-block;vertical-align:-.15em;
+  stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;fill:none;
+}
+
+/* ===================== 侧边栏 ===================== */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:92px;z-index:50;
+  display:flex;flex-direction:column;
+  padding:15px 0 max(12px,env(safe-area-inset-bottom));
+  background:var(--card);
+  border-right:var(--bw) solid var(--fg);
+  overflow-y:auto;overflow-x:hidden;scrollbar-width:none;
+}
+.sidebar::-webkit-scrollbar{display:none}
+.brand{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0 16px;flex:0 0 auto}
+.avatar{
+  width:40px;height:40px;display:grid;place-items:center;
+  font-family:"Outfit",system-ui,sans-serif;font-weight:800;font-size:17px;
+  color:var(--accent-fg);background:var(--accent);
+  border:var(--bw) solid var(--fg);
+  border-radius:14px 14px 14px 4px;      /* 不对称「对话气泡」形 */
+  box-shadow:var(--pop-sm);
+  transform:rotate(-4deg);
+}
+.brand-name{
+  font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted-fg);
+}
+.nav{display:flex;flex-direction:column;gap:3px;padding:0 9px;flex:1 1 auto}
+.nav-item{
+  appearance:none;background:transparent;font:inherit;width:100%;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:8px 2px;border-radius:14px;border:var(--bw) solid transparent;
+  color:var(--muted-fg);
+  transition:background var(--t-fast),color var(--t-fast),transform var(--t-fast),box-shadow var(--t-fast);
+}
+.nav-item .ic{width:21px;height:21px}
+.nav-item .lbl{font-size:10px;font-weight:700;line-height:1.1;white-space:nowrap;letter-spacing:.02em}
+.nav-item:hover{background:var(--muted);color:var(--fg)}
+.nav-item:active{transform:translateY(1px)}
+.nav-item.active{
+  background:var(--card);color:var(--fg);
+  border-color:var(--fg);
+  box-shadow:var(--pop-sm);
+  transform:translate(-1px,-1px);
+}
+.nav-item.active .ic{color:var(--accent)}
+.side-gear{
+  appearance:none;cursor:pointer;flex:0 0 auto;margin:10px auto 4px;
+  width:38px;height:38px;display:grid;place-items:center;
+  background:var(--card);border:var(--bw) solid var(--fg);border-radius:12px;
+  color:var(--fg);box-shadow:var(--pop-sm);
+  transition:transform var(--t-fast) var(--ease-pop),box-shadow var(--t-fast),background var(--t-fast);
+}
+.side-gear:hover{background:var(--tertiary);transform:translate(-1px,-1px) rotate(-8deg);box-shadow:var(--pop)}
+.side-gear:active{transform:translate(2px,2px);box-shadow:none}
+.side-gear .ic{width:19px;height:19px}
+
+/* ===================== 主区域 ===================== */
+.main{margin-left:92px;min-height:100vh}
+.wrap{max-width:660px;margin:0 auto;padding:26px 18px 64px;animation:popIn .4s var(--ease-pop) both}
+@keyframes popIn{from{opacity:0;transform:scale(.985) translateY(8px)}to{opacity:1;transform:none}}
+
+.page-title{
+  font-family:"Outfit","Plus Jakarta Sans","PingFang SC",system-ui,sans-serif;
+  font-size:26px;font-weight:800;letter-spacing:-.02em;line-height:1.15;color:var(--fg);
+}
+.page-sub{font-size:12.5px;color:var(--muted-fg);margin-top:6px;line-height:1.65}
+
+/* ===================== 通用卡片 / 组件 ===================== */
+.card{
+  background:var(--card);border-radius:var(--r-lg);padding:18px;
+  border:var(--bw) solid var(--fg);box-shadow:var(--sticker);
+}
+.sec-title{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  font-family:"Outfit","Plus Jakarta Sans","PingFang SC",system-ui,sans-serif;
+  font-size:15px;font-weight:800;letter-spacing:-.01em;margin:26px 0 12px;color:var(--fg);
+}
+.sec-note{
+  font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--muted-fg);
+  background:var(--muted);border-radius:var(--r-full);padding:4px 10px;white-space:nowrap;
+}
+.muted{color:var(--muted-fg);font-size:12.5px;line-height:1.7;text-wrap:pretty}
+.empty{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 10px;color:var(--muted-fg);text-align:center}
+.empty .e-ico{
+  width:66px;height:66px;display:grid;place-items:center;font-size:30px;
+  border-radius:22px 22px 22px 8px;background:var(--muted);
+  border:var(--bw) solid var(--fg);box-shadow:var(--pop-sm);
+}
+.empty .e-txt{font-size:13px;font-weight:600}
+
+/* 进度条：粗描边 + 斜纹填充（Pattern fill 签名） */
+.bar{height:13px;border-radius:var(--r-full);background:var(--muted);border:var(--bw) solid var(--fg);overflow:hidden}
+.bar>i{
+  display:block;height:100%;border-radius:var(--r-full);background-color:var(--accent);
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.34) 0 5px,transparent 5px 10px);
+  transition:width .5s var(--ease-pop);
+}
+.bar.on-hero{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.92)}
+.bar.on-hero>i{
+  background-color:var(--tertiary);
+  background-image:repeating-linear-gradient(45deg,rgba(30,41,59,.16) 0 5px,transparent 5px 10px);
+}
+.bar.thin{height:9px}
+
+/* 主卡片（原「蓝色主卡片」→ 紫罗兰 + 点阵纹理） */
+.hero{
+  position:relative;isolation:isolate;overflow:hidden;
+  border-radius:var(--r-lg);padding:22px;color:var(--accent-fg);
+  background:var(--accent);
+  border:var(--bw) solid var(--fg);
+  box-shadow:var(--pop-lg);
+  margin-top:18px;
+}
+.hero::before{
+  content:'';position:absolute;z-index:-1;width:230px;height:230px;border-radius:50%;
+  top:-118px;right:-74px;
+  background:radial-gradient(circle,rgba(255,255,255,.2),rgba(255,255,255,0) 70%);
+  pointer-events:none;
+}
+.hero::after{
+  content:'';position:absolute;z-index:-1;inset:0;pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.28) 1.2px,transparent 1.2px);
+  background-size:13px 13px;opacity:.55;
+  -webkit-mask-image:linear-gradient(115deg,transparent 38%,#000 100%);
+  mask-image:linear-gradient(115deg,transparent 38%,#000 100%);
+}
+.hero-body{display:flex;align-items:center;gap:12px;justify-content:space-between;position:relative;z-index:1}
+.hero-txt{min-width:0}
+.hero-title{font-size:17px;font-weight:800;line-height:1.4;letter-spacing:-.01em;text-wrap:balance}
+.hero-desc{font-size:11.5px;color:rgba(255,255,255,.9);margin-top:7px;line-height:1.65}
+.hero-chips{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;position:relative;z-index:1}
+.hero-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;padding:6px 11px;border-radius:var(--r-full);white-space:nowrap;
+  background:var(--card);color:var(--fg);
+  border:var(--bw) solid var(--fg);
+  box-shadow:var(--pop-sm);
+}
+.hero-chip .ic{width:13px;height:13px;stroke-width:2.8}
+.hero-chip .ic.accent{color:var(--accent)}
+.hero-chip .ic.mint{color:#059669}
+.hero-chip .ic.pink{color:var(--secondary)}
+.hero-chip .ic.amber{color:#D97706}
+.ring{flex:0 0 auto;display:block;width:88px;height:88px}
+.hero-big{
+  font-family:"Outfit",system-ui,sans-serif;font-size:28px;font-weight:800;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+}
+.hero-big small{font-size:12px;font-weight:600;opacity:.86;margin-left:3px}
+
+/* 8 宫格：白贴纸 + 彩色图标圆（confetti 轮换） */
+.grid8{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.gcell{
+  position:relative;appearance:none;background:var(--card);cursor:pointer;
+  border:var(--bw) solid var(--fg);border-radius:18px;padding:14px 5px 12px;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  box-shadow:var(--sticker-sm);
+  transition:transform var(--t) var(--ease-pop),box-shadow var(--t) var(--ease-pop),background var(--t-fast);
+}
+.gcell:hover{transform:translate(-1px,-2px) rotate(-1.5deg);box-shadow:4px 5px 0 0 var(--border)}
+.gcell:active{transform:translate(2px,2px);box-shadow:none}
+.gcell .gi{
+  width:34px;height:34px;display:grid;place-items:center;font-size:18px;line-height:1;
+  border-radius:50%;border:var(--bw) solid var(--fg);background:var(--muted);
+}
+.gcell:nth-child(4n+1) .gi{background:#EDE9FE}
+.gcell:nth-child(4n+2) .gi{background:#FCE7F3}
+.gcell:nth-child(4n+3) .gi{background:#FEF3C7}
+.gcell:nth-child(4n+4) .gi{background:#D1FAE5}
+.gcell .gl{font-size:10.5px;font-weight:700;color:var(--fg);text-align:center;line-height:1.2;white-space:nowrap}
+.gcell.done{background:#ECFDF5}
+.gcell .tick{
+  position:absolute;top:-9px;right:-7px;width:21px;height:21px;border-radius:50%;
+  background:var(--quaternary);border:var(--bw) solid var(--fg);color:var(--fg);
+  display:grid;place-items:center;opacity:0;transform:scale(.4);
+  transition:opacity var(--t) var(--ease-pop),transform var(--t) var(--ease-pop);
+}
+.gcell .tick .ic{width:12px;height:12px;stroke-width:3.2}
+.gcell.done .tick{opacity:1;transform:scale(1)}
+
+/* 筛选 chip */
+.chip-row{display:flex;gap:8px;overflow-x:auto;padding:3px 2px 7px;scrollbar-width:none}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{
+  appearance:none;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;
+  background:var(--card);color:var(--fg);
+  border:var(--bw) solid var(--fg);border-radius:var(--r-full);padding:7px 14px;
+  white-space:nowrap;flex:0 0 auto;
+  transition:transform var(--t-fast) var(--ease-pop),box-shadow var(--t-fast),background var(--t-fast),color var(--t-fast);
+}
+.chip:hover{background:var(--tertiary);transform:translate(-1px,-1px);box-shadow:var(--pop-sm)}
+.chip.on{background:var(--accent);color:var(--accent-fg);box-shadow:var(--pop-sm);transform:translate(-1px,-1px)}
+.chip:active{transform:translate(2px,2px);box-shadow:none}
+.chip.mini{font-size:11px;padding:5px 11px;font-weight:700}
+
+/* 输入 / 按钮 */
+.inp{
+  appearance:none;font:inherit;font-size:13px;font-weight:500;color:var(--fg);
+  background-color:var(--input);border:var(--bw) solid var(--soft);border-radius:12px;
+  padding:11px 14px;outline:none;min-width:0;width:100%;
+  transition:border-color var(--t-fast),box-shadow var(--t-fast),background var(--t-fast);
+}
+.inp::placeholder{color:#94A3B8}
+.inp:hover{border-color:#94A3B8}
+.inp:focus{border-color:var(--accent);box-shadow:3px 3px 0 0 var(--accent)}
+.inp-sm{font-size:12px;padding:9px 11px;border-radius:10px}
+select.inp{
+  padding-right:28px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%231E293B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 9px center;background-size:10px;
+}
+select.inp-sm{padding-right:24px;background-position:right 7px center;background-size:9px}
+input[type=time].inp{padding:9px 10px;font-size:12.5px}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.add-row{display:flex;gap:8px;margin-top:14px;align-items:center}
+.add-row .inp{flex:1 1 auto}
+
+.btn{
+  appearance:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+  border-radius:var(--r-full);padding:11px 18px;white-space:nowrap;
+  border:var(--bw) solid var(--fg);
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  transition:transform var(--t-fast) var(--ease-pop),box-shadow var(--t-fast),background var(--t-fast);
+}
+.btn .ic{width:15px;height:15px;stroke-width:2.8}
+.btn-primary{background:var(--accent);color:var(--accent-fg);box-shadow:var(--pop)}
+.btn-primary:hover{transform:translate(-2px,-2px);box-shadow:var(--pop-lg)}
+.btn-primary:active{transform:translate(2px,2px);box-shadow:none}
+.btn-ghost{background:var(--card);color:var(--fg);box-shadow:var(--pop-sm)}
+.btn-ghost:hover{background:var(--tertiary);transform:translate(-1px,-1px);box-shadow:var(--pop)}
+.btn-ghost:active{transform:translate(2px,2px);box-shadow:none}
+.btn-plain{background:transparent;border-color:transparent;color:var(--muted-fg);padding:8px 10px}
+.btn-plain:hover{background:var(--muted);color:var(--fg);transform:none;box-shadow:none}
+.btn-round{width:36px;height:36px;padding:0;border-radius:50%;flex:0 0 auto}
+
+/* 列表行 */
+.rows{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.row-item{
+  display:flex;align-items:center;gap:11px;background:var(--card);
+  border:var(--bw) solid var(--fg);border-radius:var(--r-md);padding:12px 13px;
+  box-shadow:var(--sticker-sm);
+}
+.row-item .r-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
+.row-item .r-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.r-label{font-size:13.5px;font-weight:600;color:var(--fg);word-break:break-word}
+.r-note{font-size:11px;color:var(--muted-fg);line-height:1.5}
+.r-value{font-size:13px;font-weight:800;color:var(--fg);font-variant-numeric:tabular-nums}
+.r-value.num-in{color:#047857}
+.r-value.num-out{color:var(--muted-fg)}
+.r-value.num-up{color:#B45309}
+.r-value.num-down{color:#047857}
+.r-done .r-label{color:var(--muted-fg);text-decoration:line-through;text-decoration-color:var(--soft)}
+.r-done .r-note,.r-done .tag{opacity:.6}
+
+/* 勾选框：形状 + 颜色 + 图标三重编码 */
+.cb{
+  appearance:none;flex:0 0 auto;width:24px;height:24px;border-radius:8px;padding:0;
+  border:var(--bw) solid var(--fg);background:var(--card);color:var(--fg);
+  display:grid;place-items:center;cursor:pointer;
+  transition:background var(--t-fast),transform var(--t-fast);
+}
+.cb .ic{width:13px;height:13px;stroke-width:3.2;opacity:0;transform:scale(.5);transition:opacity .2s var(--ease-pop),transform .2s var(--ease-pop)}
+.cb:hover{background:var(--muted)}
+.cb.on{background:var(--quaternary)}
+.cb.on .ic{opacity:1;transform:scale(1)}
+.cb:active{transform:scale(.92)}
+
+/* 小标签（分类）：低饱和底 + 深色字，不靠颜色单独传达 */
+.tag{
+  align-self:flex-start;font-size:10px;font-weight:700;padding:3px 9px;line-height:1.4;
+  border-radius:var(--r-full);border:var(--bw-thin) solid rgba(30,41,59,.16);
+}
+.tag--work{background:#EDE9FE;color:#6D28D9}
+.tag--me{background:#D1FAE5;color:#047857}
+.tag--shop{background:#FEF3C7;color:#B45309}
+.tag--fit{background:#FCE7F3;color:#BE185D}
+
+/* 删除按钮 */
+.del{
+  appearance:none;background:transparent;border:var(--bw) solid transparent;border-radius:9px;
+  color:var(--muted-fg);cursor:pointer;padding:3px;display:grid;place-items:center;flex:0 0 auto;
+  transition:background var(--t-fast),color var(--t-fast),border-color var(--t-fast);
+}
+.del .ic{width:14px;height:14px;stroke-width:2.6}
+.del:hover{background:#FEE2E2;color:#B91C1C;border-color:var(--fg)}
+.del:active{transform:translateY(1px)}
+
+/* 统计小卡 */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.stat{
+  background:var(--card);border:var(--bw) solid var(--fg);border-radius:var(--r-md);
+  padding:13px 12px;box-shadow:var(--sticker-sm);
+}
+.stat .s-v{
+  font-family:"Outfit",system-ui,sans-serif;font-size:17px;font-weight:800;color:var(--fg);
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em;
+}
+.stat .s-v small{font-size:10px;font-weight:600;color:var(--muted-fg);margin-left:2px}
+.stat .s-k{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted-fg);margin-top:5px}
+
+/* ===================== 欢迎页 ===================== */
+.welcome{
+  position:relative;
+  min-height:calc(100vh - 80px);min-height:calc(100dvh - 80px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:12px 8px 26px;
+}
+.halo{position:relative;width:150px;height:150px;display:grid;place-items:center;margin-bottom:30px}
+.halo-ring{position:absolute;border-radius:50%}
+.halo-ring.r1{
+  inset:0;border:var(--bw) dashed rgba(30,41,59,.38);
+  animation:spin 34s linear infinite;
+}
+.halo-ring.r2{
+  inset:22px;background:var(--tertiary);
+  border:var(--bw) solid var(--fg);
+  border-radius:50% 50% 50% 14%;        /* 叶子形圆角 */
+  box-shadow:var(--pop);
+  animation:wiggle 7s ease-in-out infinite;
+}
+.halo-core{position:relative;font-size:42px;line-height:1;animation:float 4.6s ease-in-out infinite}
+.halo::before{
+  content:'';position:absolute;width:15px;height:15px;top:2px;right:-15px;border-radius:50%;
+  background:var(--secondary);border:var(--bw) solid var(--fg);
+}
+.halo::after{
+  content:'';position:absolute;width:0;height:0;bottom:8px;left:-19px;
+  border-left:9px solid transparent;border-right:9px solid transparent;
+  border-bottom:16px solid var(--quaternary);
+  filter:drop-shadow(2px 2px 0 var(--fg));
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes wiggle{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes float{0%,100%{transform:translateY(-5px)}50%{transform:translateY(5px)}}
+.w-date{
+  font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--fg);
+  background:var(--card);border:var(--bw) solid var(--fg);border-radius:var(--r-full);
+  padding:6px 14px;box-shadow:var(--pop-sm);margin-bottom:18px;
+}
+.w-hi{
+  font-family:"Outfit","Plus Jakarta Sans","PingFang SC",system-ui,sans-serif;
+  font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.12;
+  color:var(--fg);margin-bottom:16px;
+}
+.squiggle{display:block;width:118px;height:12px;margin:0 auto 20px;color:var(--accent)}
+.w-body{font-size:14.5px;color:#334155;line-height:1.8;margin-bottom:10px;font-weight:500}
+.w-sub{font-size:12px;color:var(--muted-fg);margin-bottom:36px}
+.w-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  appearance:none;cursor:pointer;font-family:inherit;font-size:15px;font-weight:800;
+  color:var(--accent-fg);background:var(--accent);
+  border:var(--bw) solid var(--fg);padding:14px 22px 14px 30px;border-radius:var(--r-full);
+  box-shadow:var(--pop-lg);
+  transition:transform var(--t) var(--ease-pop),box-shadow var(--t) var(--ease-pop);
+}
+.w-btn:hover{transform:translate(-2px,-3px);box-shadow:7px 8px 0 0 var(--fg)}
+.w-btn:active{transform:translate(2px,2px);box-shadow:none}
+.w-btn-ico{
+  width:26px;height:26px;border-radius:50%;background:#fff;color:var(--fg);
+  border:var(--bw) solid var(--fg);display:grid;place-items:center;flex:0 0 auto;
+}
+.w-btn-ico .ic{width:13px;height:13px;stroke-width:3}
+.w-hint{font-size:11.5px;font-weight:600;color:var(--muted-fg);margin-top:16px;letter-spacing:.04em}
+
+/* 桌面端的漂浮彩屑（移动端隐藏，避免压到文字） */
+.deco{position:absolute;inset:0;pointer-events:none;z-index:-1}
+.deco span{position:absolute;border:var(--bw) solid var(--fg)}
+.deco .d1{width:34px;height:34px;border-radius:50%;background:var(--secondary);top:64px;right:12px;opacity:.85}
+.deco .d2{width:0;height:0;border:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:24px solid var(--tertiary);top:168px;left:-6px;filter:drop-shadow(2px 2px 0 var(--fg))}
+.deco .d3{width:20px;height:20px;border-radius:5px;background:var(--quaternary);bottom:70px;right:26px;transform:rotate(18deg)}
+@media (max-width:860px){.deco{display:none}}
+
+/* ===================== 运动页 ===================== */
+.cardio-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.c-card{
+  background:var(--card);border:var(--bw) solid var(--fg);border-radius:var(--r-md);
+  padding:12px 7px 10px;box-shadow:var(--sticker-sm);
+  display:flex;flex-direction:column;gap:9px;
+}
+.c-head{display:flex;align-items:center;gap:6px;padding-bottom:7px;border-bottom:var(--bw-thin) dashed var(--border)}
+.c-ico{font-size:13px;line-height:1}
+.c-title{font-size:11.5px;font-weight:800;color:var(--fg);white-space:nowrap}
+.c-tags{display:flex;flex-wrap:wrap;gap:5px;flex:1 1 auto;align-content:flex-start}
+.mini-chip{
+  appearance:none;font-family:inherit;font-size:10.5px;font-weight:700;line-height:1.4;cursor:pointer;
+  padding:4px 7px;border-radius:8px;border:var(--bw-thin) solid var(--fg);background:var(--card);
+  color:var(--fg);transition:background var(--t-fast),box-shadow var(--t-fast);white-space:nowrap;
+}
+.mini-chip:hover{background:var(--muted)}
+.mini-chip.on{background:var(--quaternary);box-shadow:2px 2px 0 0 var(--fg)}
+.mini-chip .ic{width:11px;height:11px;stroke-width:3;vertical-align:-.12em;margin-left:2px}
+.c-foot{font-size:10px;font-weight:700;color:var(--muted-fg);text-align:center;padding-top:2px}
+.c-foot.on{color:var(--fg)}
+
+/* 饮水格 */
+.water-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;flex:1 1 auto}
+.water-grid .mini-chip{padding:7px 0;text-align:center;font-size:11px;border-width:var(--bw)}
+
+/* 平台行 */
+.pf-row{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--card);
+  border:var(--bw) solid var(--fg);border-radius:var(--r-md);padding:12px 13px;
+  box-shadow:var(--sticker-sm);
+}
+.pf-ico{
+  width:32px;height:32px;display:grid;place-items:center;font-size:15px;flex:0 0 auto;
+  border-radius:11px;border:var(--bw) solid var(--fg);background:var(--muted);
+}
+.pf-name{flex:1 1 auto;font-size:13.5px;font-weight:700;color:var(--fg);min-width:52px}
+.pf-edit{display:flex;align-items:center;gap:6px;width:100%;padding-left:40px;margin-top:2px}
+.pf-edit .inp{flex:1 1 0;width:auto;min-width:0}
+
+/* 7 日条 */
+.week{display:flex;gap:7px;margin-top:14px}
+.day-dot{
+  flex:1 1 0;min-width:0;border-radius:12px;padding:8px 2px 9px;text-align:center;
+  background:var(--card);border:var(--bw) solid var(--fg);box-shadow:var(--sticker-sm);
+}
+.day-dot .dd-w{font-size:9px;font-weight:800;letter-spacing:.04em;color:var(--muted-fg)}
+.day-dot .dd-c{
+  width:19px;height:19px;margin:5px auto 0;border-radius:50%;
+  border:var(--bw) solid var(--fg);background:var(--card);color:var(--fg);
+  display:grid;place-items:center;
+}
+.day-dot .dd-c .ic{width:11px;height:11px;stroke-width:3.2;opacity:0}
+.day-dot.on{background:#ECFDF5}
+.day-dot.on .dd-c{background:var(--quaternary)}
+.day-dot.on .dd-c .ic{opacity:1}
+.day-dot.today{box-shadow:var(--pop-sm);transform:translate(-1px,-1px)}
+
+/* ===================== 图表 ===================== */
+.chart{width:100%;display:block;overflow:visible}
+.chart-empty{font-size:12px;color:var(--muted-fg);text-align:center;padding:22px 0;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:14px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--fg)}
+.legend-dot{width:11px;height:11px;border-radius:3px;flex:0 0 auto;border:var(--bw-thin) solid var(--fg)}
+
+/* ===================== 底部设置面板 ===================== */
+.sheet-mask{
+  position:fixed;inset:0;background:rgba(30,41,59,.4);backdrop-filter:blur(2px);
+  opacity:0;pointer-events:none;transition:opacity .25s;z-index:80;
+}
+.sheet-mask.show{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:90;
+  transform:translateY(105%);transition:transform .32s var(--ease-pop);
+  padding:0 14px max(16px,env(safe-area-inset-bottom));
+  display:flex;justify-content:center;pointer-events:none;
+}
+.sheet.show{transform:none;pointer-events:auto}
+.sheet-inner{
+  width:100%;max-width:460px;background:var(--card);border-radius:var(--r-lg);
+  border:var(--bw) solid var(--fg);box-shadow:var(--pop-lg);
+  padding:10px 14px 16px;
+}
+.sheet-grab{width:42px;height:5px;border-radius:var(--r-full);background:var(--fg);opacity:.25;margin:0 auto 12px}
+.sheet-title{
+  font-family:"Outfit",system-ui,sans-serif;font-size:14px;font-weight:800;
+  color:var(--fg);padding:2px 4px 12px;
+}
+.sheet-item{
+  appearance:none;background:var(--card);width:100%;font-family:inherit;font-size:13px;font-weight:700;
+  color:var(--fg);display:flex;align-items:center;gap:11px;padding:13px 14px;
+  border:var(--bw) solid var(--fg);border-radius:var(--r-md);cursor:pointer;margin-bottom:9px;
+  text-align:left;box-shadow:var(--sticker-sm);
+  transition:background var(--t-fast),transform var(--t-fast),box-shadow var(--t-fast);
+}
+.sheet-item:hover{background:var(--muted);transform:translate(-1px,-1px);box-shadow:var(--pop-sm)}
+.sheet-item:active{transform:translate(2px,2px);box-shadow:none}
+.sheet-item .si-txt{flex:1 1 auto}
+.sheet-item .si-ico{
+  width:32px;height:32px;display:grid;place-items:center;flex:0 0 auto;
+  border-radius:10px;border:var(--bw) solid var(--fg);background:var(--muted);color:var(--fg);
+}
+.sheet-item .si-ico .ic{width:16px;height:16px}
+.sheet-item.danger .si-ico{background:#FEE2E2;color:#B91C1C}
+.sheet-item .si-arrow{color:var(--muted-fg);display:grid;place-items:center}
+.sheet-item .si-arrow .ic{width:16px;height:16px}
+.sheet-item.danger{background:#FEF2F2}
+.sheet-item.danger .si-txt{color:#B91C1C}
+.sheet-item.danger:hover{background:#FEE2E2}
+
+/* ===================== 响应式 ===================== */
+/* 移动端策略：阴影收到 2px、装饰退让、按钮保持 ≥44px 可点区 */
+@media (max-width:480px){
+  .sidebar{width:74px}
+  .nav{padding:0 6px}
+  .nav-item{padding:7px 1px;border-radius:13px;gap:4px}
+  .nav-item .ic{width:19px;height:19px}
+  .nav-item .lbl{font-size:9px}
+  .brand-name{font-size:8px}
+  .avatar{width:36px;height:36px;font-size:15px;border-radius:12px 12px 12px 4px}
+  .side-gear{width:34px;height:34px;border-radius:10px}
+  .main{margin-left:74px}
+  .wrap{padding:20px 13px 56px}
+  .page-title{font-size:22px}
+  .card{padding:15px;border-radius:var(--r-md);box-shadow:2px 2px 0 0 var(--border)}
+  .hero{padding:18px;box-shadow:2px 2px 0 0 var(--fg)}
+  .hero-title{font-size:14.5px;line-height:1.45}
+  .hero-body{gap:10px}
+  .hero-chips{gap:7px;margin-top:16px}
+  .hero-chip{padding:5px 9px;font-size:10.5px}
+  .hero-big{font-size:25px}
+  .ring{width:70px;height:70px}
+  .grid8{gap:7px}
+  .gcell{padding:12px 2px 10px;border-radius:15px;box-shadow:2px 2px 0 0 var(--border)}
+  .gcell .gi{width:30px;height:30px;font-size:16px}
+  .gcell .gl{font-size:9.5px}
+  .gcell:hover{transform:none}
+  .gcell .tick{width:19px;height:19px;top:-8px;right:-6px}
+  .row-item{box-shadow:2px 2px 0 0 var(--border);padding:11px 12px;gap:9px}
+  .btn{padding:10px 15px}
+  .btn-round{width:34px;height:34px}
+  .stat{box-shadow:2px 2px 0 0 var(--border)}
+  .day-dot{box-shadow:2px 2px 0 0 var(--border)}
+  .day-dot.today{box-shadow:var(--pop-sm);transform:none}
+  .sec-title{font-size:14px}
+  .w-hi{font-size:29px}
+  .halo{width:132px;height:132px;margin-bottom:26px}
+  .w-btn{box-shadow:2px 2px 0 0 var(--fg)}
+  .cardio-grid{gap:7px}
+  .c-card{padding:11px 6px 9px}
+}
+@media (max-width:370px){
+  .cardio-grid{grid-template-columns:1fr}
+  .ring{width:66px;height:66px}
+  .grid8{gap:6px}
+  .gcell .gl{font-size:8.8px;white-space:normal}
+  .day-dot{padding:7px 1px}
+  .hero-chip{font-size:10px;padding:5px 8px}
+}
+@media (min-width:600px){
+  .hero{padding:26px}
+  .hero-title{font-size:19px}
+  .hero-desc{font-size:12.5px}
+  .ring{width:96px;height:96px}
+  .hero-big{font-size:30px}
+  .hero-chip{font-size:12px;padding:7px 13px}
+  .gcell{padding:18px 6px 15px}
+  .gcell .gi{width:40px;height:40px;font-size:21px}
+  .gcell .gl{font-size:11.5px}
+  .day-dot{flex:0 0 54px;min-width:54px}
+  .day-dot .dd-c{width:22px;height:22px}
+  .muted{font-size:13px}
+}
+@media (min-width:1100px){
+  .wrap{max-width:740px;padding:32px 24px 72px}
+  .grid8{gap:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+  .gcell:hover,.nav-item:hover,.chip:hover,.btn:hover{transform:none}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="avatar">u</div>
+      <div class="brand-name">user</div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <button class="side-gear" data-act="open-settings" aria-label="设置"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.6a1.6 1.6 0 0 0 .4 1.7 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.7 1.2v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.2 2 2 0 1 1-2.8-2.8 1.6 1.6 0 0 0-1.2-2.7H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.2-2.7 2 2 0 1 1 2.8-2.8 1.6 1.6 0 0 0 2.7-1.2V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.2 2 2 0 1 1 2.8 2.8 1.6 1.6 0 0 0-.4 1.7 1.6 1.6 0 0 0 1.4 1H21a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1Z"/></svg></button>
+  </aside>
+
+  <main class="main">
+    <div class="wrap" id="view"></div>
+  </main>
+</div>
+
+<div class="sheet-mask" id="mask" data-act="close-settings"></div>
+<div class="sheet" id="sheet"></div>
+
+<script>
+'use strict';
+
+/* =========================================================
+   1. 基础工具
+   ========================================================= */
+const pad = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const todayISO = () => iso(new Date());
+const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+const fmtCN = d => `${d.getMonth() + 1}月${d.getDate()}日·${WEEK[d.getDay()]}`;
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const clamp = (n, a = 0, b = 100) => Math.max(a, Math.min(b, n || 0));
+const sum = arr => arr.reduce((a, b) => a + b, 0);
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => {
+  const v = Math.round((n || 0) * 100) / 100;
+  return '¥' + v.toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+};
+const dayName = d => WEEK[d.getDay()];
+const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return iso(d); };
+
+/* =========================================================
+   1.5 图标层（Lucide 风格：24 网格 / 2.5px 描边 / 圆头圆角）
+   规则：图标永远装在形状里（按钮、圆形、方块），不裸放。
+   ========================================================= */
+const ICON_PATHS = {
+  home: '<path d="M3 10.5 12 3.5l9 7"/><path d="M5.5 9v11h13V9"/><path d="M10 20v-5h4v5"/>',
+  todo: '<rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="m8 9.4 1.8 1.8L13.5 7.4"/><path d="M8 15h7"/>',
+  diet: '<path d="M3.5 11h17a8.5 8.5 0 0 1-17 0Z"/><path d="M7.5 19.8h9"/><path d="M9.6 3.4c1.7 1.2 1.7 3.2 0 4.4"/><path d="M14.4 3.4c1.7 1.2 1.7 3.2 0 4.4"/>',
+  wallet: '<rect x="3" y="6" width="18" height="13" rx="3.5"/><path d="M3 10.6h18"/><circle cx="16.6" cy="14.8" r="1.3"/>',
+  sport: '<path d="M3.4 9.5v5M6.6 7v10M17.4 7v10M20.6 9.5v5M6.6 12h10.8"/>',
+  posture: '<circle cx="12" cy="4.6" r="2.1"/><path d="M12 7.2v6.8"/><path d="M12 9.4 8.2 11.6M12 9.4l3.8 2.2"/><path d="m12 14-3 6.2M12 14l3 6.2"/>',
+  scale: '<rect x="3.5" y="4.5" width="17" height="15" rx="4.5"/><path d="M8 10.4a5 5 0 0 1 8 0"/><path d="M12 12.6v2"/>',
+  english: '<path d="M3.5 5.5h8"/><path d="M7.5 3.5v2"/><path d="M9.8 5.5c0 4.6-2.6 7.7-6.3 9.3"/><path d="M5.2 10.6c1.1 2 2.8 3.4 4.9 4.2"/><path d="m13.6 20.5 3.6-9.5 3.6 9.5"/><path d="M14.9 17.2h4.6"/>',
+  media: '<path d="M4 10.2v3.6l11 4.6V5.6L4 10.2Z"/><path d="M15 8.4a3.6 3.6 0 0 1 0 7.2"/><path d="M7 14v4.4"/>',
+  video: '<rect x="3" y="6" width="12.5" height="12" rx="3.5"/><path d="m15.5 11 5.5-3.4v8.8L15.5 13"/>',
+  shirt: '<path d="M8.6 3.5 5 6.2l1.8 2.9 1.4-1V20h7.6V8.1l1.4 1L19 6.2l-3.6-2.7A3.4 3.4 0 0 1 12 5.2a3.4 3.4 0 0 1-3.4-1.7Z"/>',
+  plane: '<path d="M20.5 3.5 3.8 10.4l6.6 2.8 2.8 6.6 7.3-16.3Z"/><path d="m10.4 13.2 4.3-4.3"/>',
+  check: '<path d="m4.5 12.5 5 5 10-11"/>',
+  x: '<path d="M6 6 18 18M18 6 6 18"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  minus: '<path d="M5 12h14"/>',
+  gear: '<circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.6a1.6 1.6 0 0 0 .4 1.7 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.7 1.2v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.2 2 2 0 1 1-2.8-2.8 1.6 1.6 0 0 0-1.2-2.7H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.2-2.7 2 2 0 1 1 2.8-2.8 1.6 1.6 0 0 0 2.7-1.2V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.2 2 2 0 1 1 2.8 2.8 1.6 1.6 0 0 0-.4 1.7 1.6 1.6 0 0 0 1.4 1H21a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1Z"/>',
+  trash: '<path d="M4 7h16"/><path d="M9.5 7V4.5h5V7"/><path d="m6.5 7 1 13h9l1-13"/>',
+  flame: '<path d="M12 21c3.9 0 6.5-2.6 6.5-6 0-4.6-5-6.6-4.2-11.6C11.4 4 9.2 7 9.2 9.6c0 1 .3 1.9.9 2.6-1.6-.2-2.4-1.5-2.4-1.5-1 1.2-1.5 2.7-1.5 4.3C6.2 18.4 8.6 21 12 21Z"/>',
+  drop: '<path d="M12 3.5c3.4 4 5.2 6.3 5.2 8.8a5.2 5.2 0 0 1-10.4 0c0-2.5 1.8-4.8 5.2-8.8Z"/>',
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.4"/>',
+  trend: '<path d="M3 17 9.5 10.5l3.5 3.5L21 6"/><path d="M15 6h6v6"/>',
+  users: '<circle cx="9" cy="8.4" r="3.2"/><path d="M3 19.6c0-3.2 2.7-5.2 6-5.2s6 2 6 5.2"/><path d="M16.2 5.6a3.2 3.2 0 0 1 0 6.2"/><path d="M17.6 14.6c2 .7 3.4 2.4 3.4 5"/>',
+  book: '<path d="M4 5.5A2 2 0 0 1 6 3.5h13v17H6a2 2 0 0 1-2-2v-13Z"/><path d="M4 5.5v13"/><path d="M8 8h7"/>',
+  sparkle: '<path d="M12 3.5 14 9l5.5 2-5.5 2-2 5.5-2-5.5L4.5 11 10 9l2-5.5Z"/>',
+  pin: '<path d="M12 21s6.5-6.2 6.5-11a6.5 6.5 0 1 0-13 0C5.5 14.8 12 21 12 21Z"/><circle cx="12" cy="10" r="2.4"/>',
+  arrow: '<path d="M4.5 12h14"/><path d="m13 6.5 5.5 5.5-5.5 5.5"/>'
+};
+
+function icon(name, extra = '') {
+  const p = ICON_PATHS[name] || '';
+  return `<svg class="ic ${extra}" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${p}</svg>`;
+}
+
+/* =========================================================
+   2. 状态与持久化
+   ========================================================= */
+const KEY = 'dsh.life.workbench.v1';
+
+function seedState() {
+  const t = todayISO();
+  return {
+    v: 1,
+    profile: { name: 'user' },
+    startedOn: null,
+    lastDay: t,
+    days: {},
+    todos: [
+      { id: uid(), text: '整理本周工作计划', cat: '工作', done: true },
+      { id: uid(), text: '冥想 10 分钟', cat: '个人', done: false },
+      { id: uid(), text: '补充牛奶和鸡蛋', cat: '购物', done: true },
+      { id: uid(), text: '晚上散步 30 分钟', cat: '健身', done: false }
+    ],
+    morning: [
+      { id: uid(), text: '起床时间', kind: 'time', time: '07:50', note: '养成早起好习惯', done: true },
+      { id: uid(), text: '早上体重', kind: 'check', note: '空腹记录更准', done: false },
+      { id: uid(), text: '一杯温水', kind: 'check', note: '唤醒身体代谢', done: false }
+    ],
+    cardio: {
+      '有氧': [
+        { id: uid(), name: '跑步', done: false },
+        { id: uid(), name: '椭圆机', done: false },
+        { id: uid(), name: '跳绳', done: false },
+        { id: uid(), name: '游泳', done: false }
+      ],
+      '无氧': [
+        { id: uid(), name: '力量训练', done: false },
+        { id: uid(), name: '器械训练', done: false }
+      ],
+      '混氧HIIT': [
+        { id: uid(), name: '高强度间歇', done: false },
+        { id: uid(), name: '波比跳', done: false },
+        { id: uid(), name: '战绳', done: false }
+      ]
+    },
+    diet: {
+      target: 1600,
+      water: 0,
+      meals: {
+        '早餐': [
+          { id: uid(), name: '燕麦牛奶', kcal: 260 },
+          { id: uid(), name: '水煮蛋', kcal: 80 }
+        ],
+        '午餐': [],
+        '晚餐': [],
+        '加餐': []
+      }
+    },
+    finance: {
+      budget: 3000,
+      tx: [
+        { id: uid(), type: '支出', cat: '餐饮', amount: 28, note: '午餐', date: t }
+      ]
+    },
+    weight: {
+      target: 50,
+      records: [
+        { id: uid(), date: daysAgo(4), kg: 53.6 },
+        { id: uid(), date: daysAgo(3), kg: 53.5 },
+        { id: uid(), date: daysAgo(2), kg: 53.3 },
+        { id: uid(), date: daysAgo(1), kg: 53.2 }
+      ]
+    },
+    english: {
+      targetWords: 20,
+      words: 20,
+      minutes: 0,
+      book: [
+        { id: uid(), word: 'diligence', mean: 'n. 勤勉，用功' },
+        { id: uid(), word: 'steady', mean: 'adj. 稳定的，沉着的' },
+        { id: uid(), word: 'routine', mean: 'n. 日常惯例' }
+      ],
+      tasks: [
+        { id: uid(), text: '听力 20 分钟', done: false },
+        { id: uid(), text: '口语跟读 10 分钟', done: false },
+        { id: uid(), text: '阅读 1 篇短文', done: false }
+      ]
+    },
+    posture: {
+      done: {},
+      mood: '',
+      habits: [
+        { id: uid(), text: '靠墙站立 5 分钟', note: '改善圆肩' },
+        { id: uid(), text: '收下巴 3 组 × 10 次', note: '缓解头前伸' },
+        { id: uid(), text: '开肩拉伸', note: '打开胸椎' },
+        { id: uid(), text: '臀桥 20 次', note: '激活臀部' },
+        { id: uid(), text: '颈后肌群训练', note: '改善富贵包' }
+      ]
+    },
+    media: {
+      platforms: [
+        { id: uid(), emoji: '📕', name: '小红书', followers: 1280, posted: false },
+        { id: uid(), emoji: '🟢', name: '公众号', followers: 420, posted: false },
+        { id: uid(), emoji: '📺', name: 'B 站', followers: 860, posted: false },
+        { id: uid(), emoji: '🎵', name: '抖音', followers: 2350, posted: false }
+      ],
+      ideas: [
+        { id: uid(), text: '早八人的 5 分钟出门仪式', stage: '待写' },
+        { id: uid(), text: '一个月不点外卖的第 30 天', stage: '灵感' },
+        { id: uid(), text: '通勤路上的碎片化运动', stage: '已发布' }
+      ]
+    },
+    video: {
+      minutes: 0,
+      projects: [
+        {
+          id: uid(), title: '7 月生活复盘 vlog',
+          stages: { '选题': true, '脚本': true, '拍摄': false, '剪辑': false, '发布': false }
+        }
+      ],
+      watch: [
+        { id: uid(), text: '剪辑节奏训练 · 第 3 集', done: false },
+        { id: uid(), text: '手机运镜 12 个机位', done: false }
+      ]
+    },
+    outfit: {
+      outfits: {},
+      note: '',
+      mood: '',
+      items: [
+        { id: uid(), name: '白衬衫', cat: '上衣' },
+        { id: uid(), name: '浅蓝针织衫', cat: '上衣' },
+        { id: uid(), name: '直筒牛仔裤', cat: '下装' },
+        { id: uid(), name: '米色阔腿裤', cat: '下装' },
+        { id: uid(), name: '小白鞋', cat: '鞋履' }
+      ]
+    },
+    travel: {
+      cities: 5,
+      wishes: [
+        { id: uid(), place: '大理', note: '洱海骑行 + 古城慢逛', done: false },
+        { id: uid(), place: '京都', note: '秋天看红叶，住町屋', done: false },
+        { id: uid(), place: '冰岛', note: '极光自驾环岛', done: false }
+      ],
+      todos: [
+        { id: uid(), text: '检查护照有效期', done: true },
+        { id: uid(), text: '对比 3 家机票价格', done: false }
+      ]
+    }
+  };
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return seedState();
+    const s = JSON.parse(raw);
+    if (!s || s.v !== 1) return seedState();
+    const base = seedState();
+    return Object.assign(base, s);
+  } catch (e) {
+    return seedState();
+  }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* 存储不可用时静默降级 */ }
+}
+
+let state = load();
+const ui = {
+  page: 'home',
+  todoCat: '全部',
+  todoStatus: '全部',
+  finType: '支出',
+  cardioGroup: '有氧',
+  sheetOpen: false,
+  resetArmed: false
+};
+
+/* 跨天自动重置「当日」类数据 */
+function rollover() {
+  const t = todayISO();
+  if (state.lastDay === t) return;
+  state.morning.forEach(m => { if (m.kind === 'check') m.done = false; });
+  Object.keys(state.cardio).forEach(g => state.cardio[g].forEach(i => { i.done = false; }));
+  state.diet.water = 0;
+  state.english.words = 0;
+  state.english.minutes = 0;
+  state.english.tasks.forEach(t => { t.done = false; });
+  state.posture.done = {};
+  state.media.platforms.forEach(p => { p.posted = false; });
+  state.outfit.outfits = {};
+  state.outfit.note = '';
+  state.outfit.mood = '';
+  state.video.minutes = 0;
+  state.lastDay = t;
+  save();
+}
+rollover();
+
+/* 记录「今天有动作」用于连续打卡 */
+function touch() {
+  const t = todayISO();
+  if (!state.days[t]) state.days[t] = true;
+}
+
+function streak() {
+  let n = 0;
+  const d = new Date();
+  if (!state.days[iso(d)]) d.setDate(d.getDate() - 1);
+  while (state.days[iso(d)]) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+/* =========================================================
+   3. 派生数据
+   ========================================================= */
+const mealNames = ['早餐', '午餐', '晚餐', '加餐'];
+const mealCount = () => mealNames.filter(m => (state.diet.meals[m] || []).length > 0).length;
+const mealKcal = m => sum((state.diet.meals[m] || []).map(i => i.kcal || 0));
+const dietKcal = () => mealNames.reduce((a, m) => a + mealKcal(m), 0);
+const cardioAll = () => Object.values(state.cardio).flat();
+const cardioDone = () => cardioAll().filter(i => i.done).length;
+const postureDone = () => state.posture.habits.filter(h => state.posture.done[h.id]).length;
+const monthPrefix = () => todayISO().slice(0, 7);
+const monthTx = () => state.finance.tx.filter(t => (t.date || '').startsWith(monthPrefix()));
+const monthExpense = () => sum(monthTx().filter(t => t.type === '支出').map(t => t.amount));
+const monthIncome = () => sum(monthTx().filter(t => t.type === '收入').map(t => t.amount));
+
+function gridItems() {
+  const t = todayISO();
+  return [
+    { icon: '📝', label: '日常待办', page: 'todo', done: state.todos.length > 0 && state.todos.every(x => x.done) },
+    { icon: '🌤️', label: '晨间仪式', page: 'exercise', done: state.morning.length > 0 && state.morning.every(m => m.done) },
+    { icon: '🥗', label: '饮食记录', page: 'diet', done: mealCount() >= 2 },
+    { icon: '🏃', label: '健身运动', page: 'exercise', done: cardioDone() > 0 },
+    { icon: '🧘', label: '体态管理', page: 'posture', done: postureDone() > 0 },
+    { icon: '⚖️', label: '体重记录', page: 'weight', done: state.weight.records.some(r => r.date === t) },
+    { icon: '🔤', label: '技能学习', page: 'english', done: state.english.words >= state.english.targetWords || state.english.tasks.some(x => x.done) },
+    { icon: '💰', label: '今日记账', page: 'finance', done: state.finance.tx.some(x => x.date === t) }
+  ];
+}
+
+/* =========================================================
+   4. 通用零件
+   ========================================================= */
+function ring(pct, label = '今日进度') {
+  const r = 42, c = 2 * Math.PI * r;
+  const off = c * (1 - clamp(pct) / 100);
+  return `<svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="rgba(255,255,255,.34)" stroke-width="7"/>
+    <circle cx="50" cy="50" r="${r}" fill="none" stroke="#fff" stroke-width="7"
+      stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"
+      transform="rotate(-90 50 50)"/>
+    <text x="50" y="45" text-anchor="middle" dominant-baseline="middle" fill="#fff"
+      font-size="21" font-weight="700">${Math.round(clamp(pct))}%</text>
+    <text x="50" y="63" text-anchor="middle" dominant-baseline="middle"
+      fill="rgba(255,255,255,.88)" font-size="10.5">${label}</text>
+  </svg>`;
+}
+
+const bar = (pct, extra = '') =>
+  `<div class="bar ${extra}"><i style="width:${clamp(pct)}%"></i></div>`;
+
+const pageHead = (title, sub) =>
+  `<div><div class="page-title">${title}</div>${sub ? `<div class="page-sub">${sub}</div>` : ''}</div>`;
+
+const emptyState = (icon, text) =>
+  `<div class="empty"><div class="e-ico">${icon}</div><div class="e-txt">${text}</div></div>`;
+
+const weekStrip = (onFn) => {
+  const cells = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const on = onFn(iso(d));
+    cells.push(`<div class="day-dot ${on ? 'on' : ''} ${i === 0 ? 'today' : ''}">
+      <div class="dd-w">${WEEK[d.getDay()].replace('周', '')}</div>
+      <div class="dd-c">${on ? icon('check') : ''}</div>
+    </div>`);
+  }
+  return `<div class="week">${cells.join('')}</div>`;
+};
+
+/* =========================================================
+   5. 页面：首页
+   ========================================================= */
+function renderWelcome() {
+  return `<div class="welcome">
+    <div class="deco" aria-hidden="true"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+    <div class="halo">
+      <span class="halo-ring r1"></span>
+      <span class="halo-ring r2"></span>
+      <span class="halo-core">🌱</span>
+    </div>
+    <div class="w-date">${fmtCN(new Date())}</div>
+    <h1 class="w-hi">嗨，${esc(state.profile.name || 'user')}</h1>
+    <svg class="squiggle" viewBox="0 0 118 12" fill="none" aria-hidden="true">
+      <path d="M2 8.5c7-7 14 3.5 21-1s14-6.5 21 0 14 3.5 21-1 14-6.5 21 0" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+    </svg>
+    <p class="w-body">不必羡慕别人，你也在成为更好的路上。</p>
+    <p class="w-sub">今天也要好好吃饭、好好流汗。</p>
+    <button class="w-btn" data-act="start">开始今天<span class="w-btn-ico">${icon('arrow')}</span></button>
+    <p class="w-hint">点一下，开启今日计划</p>
+  </div>`;
+}
+
+function renderHome() {
+  const g = gridItems();
+  const done = g.filter(x => x.done).length;
+  const pct = Math.round(done / g.length * 100);
+  const st = streak();
+  return `
+  ${pageHead('今天', fmtCN(new Date()))}
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-title">今天也要轻盈地完成目标</div>
+        <div class="hero-desc">把每一件小事做完，就是稳定的进步。</div>
+      </div>
+      ${ring(pct)}
+    </div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('check', 'mint')} ${done}/${g.length} 已完成</span>
+      <span class="hero-chip">${icon('flame', 'pink')} 连续打卡 ${st} 天</span>
+    </div>
+  </section>
+
+  <div class="sec-title">今日完成情况<span class="sec-note">${done}/${g.length}</span></div>
+  <div class="grid8">
+    ${g.map(it => `
+      <button class="gcell ${it.done ? 'done' : ''}" data-act="goto" data-page="${it.page}">
+        <span class="tick">${icon('check')}</span>
+        <span class="gi">${it.icon}</span>
+        <span class="gl">${it.label}</span>
+      </button>`).join('')}
+  </div>
+
+  <div class="sec-title">慢慢来<span class="sec-note">比较快</span></div>
+  <div class="card">
+    <div class="muted">今天的目标不是「全做完」，而是「有在动」。哪一个格子最想先点亮，就点它。</div>
+    <div class="add-row">
+      <button class="btn btn-ghost" data-act="goto" data-page="todo">去待办</button>
+      <button class="btn btn-ghost" data-act="goto" data-page="exercise">去运动</button>
+      <button class="btn btn-ghost" data-act="goto" data-page="diet">去饮食</button>
+    </div>
+  </div>
+
+  <div class="sec-title">本周记录<span class="sec-note">连续 ${st} 天</span></div>
+  ${weekStrip(d => !!state.days[d])}`;
+}
+
+/* =========================================================
+   6. 页面：待办
+   ========================================================= */
+/* 分类 → tag 修饰类（配色收敛到 CSS，不再逐行内联） */
+const CAT_KEY = { '工作': 'work', '个人': 'me', '购物': 'shop', '健身': 'fit' };
+
+function renderTodo() {
+  const cats = ['全部', '工作', '个人', '购物', '健身'];
+  const stats = ['全部', '未完成', '已完成'];
+  const list = state.todos.filter(t =>
+    (ui.todoCat === '全部' || t.cat === ui.todoCat) &&
+    (ui.todoStatus === '全部' || (ui.todoStatus === '未完成' ? !t.done : t.done))
+  );
+  const left = state.todos.filter(t => !t.done).length;
+
+  return `
+  ${pageHead('待办清单', state.todos.length ? `共 ${state.todos.length} 项，还有 ${left} 项没完成` : '把想做的事写下来，就不用一直记着')}
+
+  <div style="margin-top:18px">
+    <div class="chip-row">
+      ${cats.map(c => `<button class="chip ${ui.todoCat === c ? 'on' : ''}" data-act="todo-cat" data-cat="${c}">${c}</button>`).join('')}
+    </div>
+    <div class="chip-row" style="margin-top:2px">
+      ${stats.map(s => `<button class="chip mini ${ui.todoStatus === s ? 'on' : ''}" data-act="todo-status" data-status="${s}">${s}</button>`).join('')}
+    </div>
+  </div>
+
+  <div class="add-row">
+    <input class="inp" data-in="todo" data-enter="todo-add" placeholder="添加待办事项..." />
+    <button class="btn btn-primary" data-act="todo-add">添加</button>
+  </div>
+
+  ${list.length ? `<div class="rows">
+    ${list.map(t => {
+      return `<div class="row-item ${t.done ? 'r-done' : ''}">
+        <button class="cb ${t.done ? 'on' : ''}" data-act="todo-toggle" data-id="${t.id}">${t.done ? icon('check') : ''}</button>
+        <div class="r-main">
+          <span class="r-label" data-act="todo-edit" data-id="${t.id}">${esc(t.text)}</span>
+          <span class="tag tag--${CAT_KEY[t.cat] || 'me'}">${esc(t.cat)}</span>
+        </div>
+        <button class="del" data-act="todo-del" data-id="${t.id}" aria-label="删除">${icon('x')}</button>
+      </div>`;
+    }).join('')}
+  </div>` : emptyState('📝', '暂无待办事项。')}`;
+}
+
+/* =========================================================
+   7. 页面：饮食
+   ========================================================= */
+function renderDiet() {
+  const target = state.diet.target || 1600;
+  const kcal = dietKcal();
+  const left = Math.max(target - kcal, 0);
+  const pct = target ? Math.round(kcal / target * 100) : 0;
+
+  return `
+  ${pageHead('饮食记录', '好好吃饭，是最基础的自我照顾')}
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-desc" style="margin-top:0">今日摄入</div>
+        <div class="hero-big">${kcal}<small>/ ${target} kcal</small></div>
+      </div>
+      ${ring(pct, '热量摄入')}
+    </div>
+    <div style="margin-top:14px;position:relative;z-index:1">${bar(pct, 'on-hero')}</div>
+    <div class="hero-desc" style="margin-top:8px;position:relative;z-index:1">剩余 ${left} kcal · 已记录 ${mealCount()}/4 餐</div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('drop', 'accent')} 饮水 ${state.diet.water}/8 杯</span>
+      <span class="hero-chip">${icon('diet', 'amber')} 早餐 ${mealKcal('早餐')} kcal</span>
+    </div>
+  </section>
+
+  <div class="sec-title">饮水打卡<span class="sec-note">目标 8 杯</span></div>
+  <div class="card">
+    <div class="water-grid">
+      ${Array.from({ length: 8 }, (_, i) => `
+        <button class="mini-chip ${i < state.diet.water ? 'on' : ''}" data-act="water-set" data-n="${i + 1}">💧</button>
+      `).join('')}
+    </div>
+    <div class="add-row" style="margin-top:12px">
+      <span class="muted" style="flex:1 1 auto">点水杯记录一杯，共 ${state.diet.water}/8 杯</span>
+      <button class="btn btn-plain" data-act="water-set" data-n="0">清零</button>
+    </div>
+  </div>
+
+  ${mealNames.map(m => {
+    const items = state.diet.meals[m] || [];
+    const k = mealKcal(m);
+    const icons = { '早餐': '🍳', '午餐': '🍚', '晚餐': '🥣', '加餐': '🍎' };
+    return `<div class="sec-title">${icons[m]} ${m}<span class="sec-note">${k ? k + ' kcal' : '尚未记录'}</span></div>
+    <div class="card">
+      ${items.length ? `<div class="rows" style="margin-top:0">
+        ${items.map(i => `<div class="row-item">
+          <div class="r-main"><span class="r-label">${esc(i.name)}</span></div>
+          <span class="r-value">${i.kcal} kcal</span>
+          <button class="del" data-act="diet-del" data-meal="${m}" data-id="${i.id}">${icon('x')}</button>
+        </div>`).join('')}
+      </div>` : `<div class="muted">这一餐还没记录。</div>`}
+      <div class="add-row">
+        <input class="inp inp-sm" data-in="food-${m}" data-enter="diet-add" data-meal="${m}" placeholder="吃了什么？" />
+        <input class="inp inp-sm" type="number" inputmode="numeric" data-in="kcal-${m}" placeholder="kcal" style="width:74px" />
+        <button class="btn btn-primary btn-round" data-act="diet-add" data-meal="${m}" aria-label="添加">${icon('plus')}</button>
+      </div>
+    </div>`;
+  }).join('')}
+
+  <div class="sec-title">热量目标<span class="sec-note">可自行调整</span></div>
+  <div class="card">
+    <div class="add-row" style="margin-top:0">
+      <input class="inp inp-sm" type="number" inputmode="numeric" value="${target}" data-change="diet-target" />
+      <span class="muted" style="flex:0 0 auto">kcal / 天</span>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   8. 页面：财务
+   ========================================================= */
+const FIN_CATS = [
+  { name: '餐饮', emoji: '🍜', color: '#F472B6' },
+  { name: '交通', emoji: '🚌', color: '#34D399' },
+  { name: '购物', emoji: '🛍️', color: '#8B5CF6' },
+  { name: '居住', emoji: '🏠', color: '#FBBF24' },
+  { name: '娱乐', emoji: '🎮', color: '#60A5FA' },
+  { name: '学习', emoji: '📚', color: '#A78BFA' },
+  { name: '其他', emoji: '✨', color: '#94A3B8' }
+];
+
+function donut(segs, centerTop, centerSub) {
+  const total = sum(segs.map(s => s.value)) || 1;
+  const R = 50, SW = 17, C = 2 * Math.PI * R;
+  let acc = 0;
+  const circles = segs.filter(s => s.value > 0).map(s => {
+    const len = s.value / total * C;
+    const g = 1.6;
+    const dash = Math.max(len - g, 0.4);
+    const out = `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${s.color}" stroke-width="${SW}"
+      stroke-dasharray="${dash.toFixed(2)} ${(C - dash).toFixed(2)}" stroke-dashoffset="${(-acc).toFixed(2)}"
+      transform="rotate(-90 70 70)"/>`;
+    acc += len;
+    return out;
+  }).join('');
+  return `<svg viewBox="0 0 140 140" width="140" height="140" role="img" aria-label="支出构成">
+    <circle cx="70" cy="70" r="${R}" fill="none" stroke="#eef7fd" stroke-width="${SW}"/>
+    ${circles}
+    <text x="70" y="64" text-anchor="middle" font-size="17" font-weight="800" fill="#1E293B">${centerTop}</text>
+    <text x="70" y="82" text-anchor="middle" font-size="9" font-weight="600" fill="#64748B">${centerSub}</text>
+  </svg>`;
+}
+
+function renderFinance() {
+  const budget = state.finance.budget || 3000;
+  const spent = monthExpense();
+  const income = monthIncome();
+  const pct = budget ? Math.round(spent / budget * 100) : 0;
+  const tx = [...monthTx()].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const byCat = FIN_CATS.map(c => ({
+    ...c,
+    value: sum(tx.filter(t => t.type === '支出' && t.cat === c.name).map(t => t.amount))
+  })).filter(c => c.value > 0);
+
+  return `
+  ${pageHead('财务', '看清钱去哪了，才谈得上攒下来')}
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-desc" style="margin-top:0">本月支出</div>
+        <div class="hero-big">${money(spent)}<small>/ 预算 ${money(budget)}</small></div>
+      </div>
+      ${ring(pct, '本月预算')}
+    </div>
+    <div style="margin-top:14px;position:relative;z-index:1">${bar(pct, 'on-hero')}</div>
+    <div class="hero-desc" style="margin-top:8px;position:relative;z-index:1">${pct >= 100 ? '已超出预算，接下来轻一点花' : '本月还可以花 ' + money(Math.max(budget - spent, 0))}</div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('trend', 'mint')} 收入 ${money(income)}</span>
+      <span class="hero-chip">${icon('wallet', 'accent')} 结余 ${money(income - spent)}</span>
+    </div>
+  </section>
+
+  <div class="sec-title">支出构成<span class="sec-note">本月</span></div>
+  <div class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center">
+    ${byCat.length ? donut(byCat, money(spent), '总支出') : `<div class="chart-empty" style="flex:1 1 100%">本月还没有支出记录</div>`}
+    ${byCat.length ? `<div class="legend" style="flex:1 1 140px;flex-direction:column;gap:8px;margin-top:0">
+      ${byCat.map(c => `<div class="legend-item">
+        <span class="legend-dot" style="background:${c.color}"></span>
+        <span style="flex:1 1 auto">${c.emoji} ${c.name}</span>
+        <span class="r-note">${money(c.value)}</span>
+      </div>`).join('')}
+    </div>` : ''}
+  </div>
+
+  <div class="sec-title">记一笔</div>
+  <div class="card">
+    <div class="add-row" style="margin-top:0">
+      <input class="inp inp-sm" type="number" inputmode="decimal" data-in="fin-amount" placeholder="金额" style="flex:1.2 1 0" />
+      <button class="chip ${ui.finType === '支出' ? 'on' : ''}" data-act="fin-type" data-type="支出">支出</button>
+      <button class="chip ${ui.finType === '收入' ? 'on' : ''}" data-act="fin-type" data-type="收入">收入</button>
+    </div>
+    <div class="add-row">
+      <input class="inp inp-sm" data-in="fin-note" data-enter="fin-add" placeholder="备注，如：午餐" />
+      <select class="inp inp-sm" data-in="fin-cat" style="width:96px;flex:0 0 auto">
+        ${FIN_CATS.map(c => `<option value="${c.name}">${c.emoji} ${c.name}</option>`).join('')}
+      </select>
+      <button class="btn btn-primary btn-round" data-act="fin-add" aria-label="添加">${icon('plus')}</button>
+    </div>
+  </div>
+
+  <div class="sec-title">本月明细<span class="sec-note">${tx.length} 笔</span></div>
+  ${tx.length ? `<div class="rows">
+    ${tx.map(t => {
+      const c = FIN_CATS.find(x => x.name === t.cat) || FIN_CATS[6];
+      const isOut = t.type === '支出';
+      return `<div class="row-item">
+        <span class="pf-ico">${c.emoji}</span>
+        <div class="r-main">
+          <span class="r-label">${esc(t.note || c.name)}</span>
+          <span class="r-note">${esc(t.date)} · ${esc(t.cat)}</span>
+        </div>
+        <span class="r-value ${isOut ? 'num-out' : 'num-in'}">${isOut ? '-' : '+'}${money(t.amount)}</span>
+        <button class="del" data-act="fin-del" data-id="${t.id}">${icon('x')}</button>
+      </div>`;
+    }).join('')}
+  </div>` : emptyState('💰', '这个月还没有记录。')}
+
+  <div class="sec-title">月度预算</div>
+  <div class="card">
+    <div class="add-row" style="margin-top:0">
+      <input class="inp inp-sm" type="number" inputmode="numeric" value="${budget}" data-change="fin-budget" />
+      <span class="muted" style="flex:0 0 auto">元 / 月</span>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   9. 页面：运动
+   ========================================================= */
+function renderExercise() {
+  const mDone = state.morning.filter(m => m.done).length;
+  const cDone = cardioDone();
+  const cTotal = cardioAll().length;
+  const totalDone = mDone + cDone;
+  const totalAll = state.morning.length + cTotal;
+  const pct = totalAll ? Math.round(totalDone / totalAll * 100) : 0;
+
+  return `
+  ${pageHead('运动打卡', '身体动了，情绪就稳了一半')}
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-title">今天动了 ${totalDone} 项</div>
+        <div class="hero-desc">晨间仪式 ${mDone}/${state.morning.length} · 运动打卡 ${cDone}/${cTotal}</div>
+      </div>
+      ${ring(pct)}
+    </div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('flame', 'pink')} 连续 ${streak()} 天</span>
+      <span class="hero-chip">${icon('check', 'mint')} 今日 ${totalDone}/${totalAll}</span>
+    </div>
+  </section>
+
+  <div class="sec-title">晨间仪式<span class="sec-note">${mDone}/${state.morning.length} 项完成</span></div>
+  <div class="rows" style="margin-top:0">
+    ${state.morning.map(m => `<div class="row-item">
+      <button class="cb ${m.done ? 'on' : ''}" data-act="morning-toggle" data-id="${m.id}">${m.done ? icon('check') : ''}</button>
+      <div class="r-main">
+        <div class="r-top">
+          <span class="r-label">${esc(m.text)}</span>
+          ${m.kind === 'time' ? `<input class="inp inp-sm" type="time" value="${esc(m.time || '')}" data-change="morning-time" data-id="${m.id}" style="width:96px;flex:0 0 auto" />` : ''}
+        </div>
+        <span class="r-note">${esc(m.note || '')}</span>
+      </div>
+      <button class="del" data-act="morning-del" data-id="${m.id}">${icon('x')}</button>
+    </div>`).join('')}
+  </div>
+  <div class="add-row">
+    <input class="inp" data-in="morning-new" data-enter="morning-add" placeholder="添加晨间习惯，如：晒 5 分钟太阳" />
+    <button class="btn btn-primary" data-act="morning-add">添加</button>
+  </div>
+
+  <div class="sec-title">今日有氧打卡<span class="sec-note">点一下就算完成</span></div>
+  <div class="cardio-grid">
+    ${Object.keys(state.cardio).map(g => {
+      const items = state.cardio[g];
+      const done = items.filter(i => i.done).length;
+      const ico = g === '有氧' ? '🏃' : g === '无氧' ? '🏋️' : '⚡';
+      return `<div class="c-card">
+        <div class="c-head"><span class="c-ico">${ico}</span><span class="c-title">${g}</span></div>
+        <div class="c-tags">
+          ${items.map(i => `<button class="mini-chip ${i.done ? 'on' : ''}" data-act="cardio" data-g="${g}" data-id="${i.id}">${esc(i.name)}</button>`).join('')}
+        </div>
+        <div class="c-foot ${done ? 'on' : ''}">${done ? '已打卡 ' + done + '/' + items.length : '点击打卡'}</div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="add-row">
+    <select class="inp inp-sm" data-in="cardio-group" style="width:104px;flex:0 0 auto">
+      ${Object.keys(state.cardio).map(g => `<option value="${g}" ${ui.cardioGroup === g ? 'selected' : ''}>${g}</option>`).join('')}
+    </select>
+    <input class="inp inp-sm" data-in="cardio-new" data-enter="cardio-add" placeholder="添加自定义运动" />
+    <button class="btn btn-primary btn-round" data-act="cardio-add" aria-label="添加">${icon('plus')}</button>
+  </div>
+
+  <div class="sec-title">本周打卡<span class="sec-note">连续 ${streak()} 天</span></div>
+  ${weekStrip(d => !!state.days[d])}`;
+}
+
+/* =========================================================
+   10. 页面：体态
+   ========================================================= */
+function renderPosture() {
+  const total = state.posture.habits.length;
+  const done = postureDone();
+  const pct = total ? Math.round(done / total * 100) : 0;
+  const moods = ['挺拔', '还行', '需注意'];
+
+  return `
+  ${pageHead('体态管理', '每天 5 分钟，把肩膀放回去')}
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-title">今日训练 ${done}/${total}</div>
+        <div class="hero-desc">坚持比强度更重要。</div>
+      </div>
+      ${ring(pct, '今日训练')}
+    </div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('flame', 'pink')} 连续 ${streak()} 天</span>
+      <span class="hero-chip">${icon('target', 'accent')} 完成度 ${pct}%</span>
+    </div>
+  </section>
+
+  <div class="sec-title">今日训练清单<span class="sec-note">${done}/${total} 项完成</span></div>
+  <div class="rows" style="margin-top:0">
+    ${state.posture.habits.map(h => {
+      const on = !!state.posture.done[h.id];
+      return `<div class="row-item ${on ? 'r-done' : ''}">
+        <button class="cb ${on ? 'on' : ''}" data-act="posture-toggle" data-id="${h.id}">${on ? icon('check') : ''}</button>
+        <div class="r-main">
+          <span class="r-label">${esc(h.text)}</span>
+          <span class="r-note">${esc(h.note || '')}</span>
+        </div>
+        <button class="del" data-act="posture-del" data-id="${h.id}">${icon('x')}</button>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="add-row">
+    <input class="inp" data-in="posture-new" data-enter="posture-add" placeholder="添加训练动作，如：肩胛稳定训练" />
+    <button class="btn btn-primary" data-act="posture-add">添加</button>
+  </div>
+
+  <div class="sec-title">今日体感<span class="sec-note">凭感觉选一个</span></div>
+  <div class="card">
+    <div class="chip-row" style="padding-bottom:0">
+      ${moods.map(m => `<button class="chip ${state.posture.mood === m ? 'on' : ''}" data-act="posture-mood" data-mood="${m}">${m}</button>`).join('')}
+    </div>
+    <div class="muted" style="margin-top:12px">坐久了起来站一站，让锁骨回到自然的位置。</div>
+  </div>
+
+  <div class="sec-title">本周打卡<span class="sec-note">连续 ${streak()} 天</span></div>
+  ${weekStrip(d => !!state.days[d])}`;
+}
+
+/* =========================================================
+   11. 页面：体重
+   ========================================================= */
+function weightChart() {
+  const recs = [...state.weight.records].sort((a, b) => a.date.localeCompare(b.date)).slice(-14);
+  if (recs.length < 2) return `<div class="chart-empty">再记录一次，就能看到趋势啦</div>`;
+  const W = 320, H = 136, PL = 14, PR = 14, PT = 16, PB = 22;
+  const vals = recs.map(r => r.kg);
+  const target = state.weight.target;
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (target) { min = Math.min(min, target); max = Math.max(max, target); }
+  const span = Math.max(max - min, 1);
+  min -= span * 0.18; max += span * 0.18;
+  const X = i => PL + (W - PL - PR) * (recs.length === 1 ? 0.5 : i / (recs.length - 1));
+  const Y = v => PT + (H - PT - PB) * (1 - (v - min) / (max - min));
+  const line = recs.map((r, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(r.kg).toFixed(1)}`).join(' ');
+  const area = `M${X(0).toFixed(1)},${(H - PB).toFixed(1)} ` +
+    recs.map((r, i) => `L${X(i).toFixed(1)},${Y(r.kg).toFixed(1)}`).join(' ') +
+    ` L${X(recs.length - 1).toFixed(1)},${(H - PB).toFixed(1)} Z`;
+  const dots = recs.map((r, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(r.kg).toFixed(1)}" r="3.4" fill="#fff" stroke="#8B5CF6" stroke-width="2.2"/>`).join('');
+  const tline = target
+    ? `<line x1="${PL}" x2="${W - PR}" y1="${Y(target).toFixed(1)}" y2="${Y(target).toFixed(1)}" stroke="#CBD5E1" stroke-width="1.6" stroke-dasharray="5 4"/>
+       <text x="${W - PR}" y="${(Y(target) - 5).toFixed(1)}" text-anchor="end" font-size="8" font-weight="700" fill="#64748B">目标 ${target}kg</text>`
+    : '';
+  const labels = `<text x="${X(0).toFixed(1)}" y="${H - 6}" text-anchor="start" font-size="8" fill="#64748B">${recs[0].date.slice(5)}</text>
+    <text x="${X(recs.length - 1).toFixed(1)}" y="${H - 6}" text-anchor="end" font-size="8" fill="#64748B">${recs[recs.length - 1].date.slice(5)}</text>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="体重趋势">
+    <defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8B5CF6" stop-opacity=".3"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${tline}
+    <path d="${area}" fill="url(#wg)"/>
+    <path d="${line}" fill="none" stroke="#8B5CF6" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}${labels}
+  </svg>`;
+}
+
+function renderWeight() {
+  const recs = [...state.weight.records].sort((a, b) => a.date.localeCompare(b.date));
+  const cur = recs.length ? recs[recs.length - 1].kg : 0;
+  const first = recs.length ? recs[0].kg : 0;
+  const target = state.weight.target;
+  const diff = target ? (cur - target) : 0;
+  const changed = recs.length > 1 ? (cur - first) : 0;
+  const list = [...recs].sort((a, b) => b.date.localeCompare(a.date));
+
+  return `
+  ${pageHead('体重记录', '数字是参考，趋势才是答案')}
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-desc" style="margin-top:0">当前体重</div>
+        <div class="hero-big">${cur.toFixed(1)}<small>kg</small></div>
+        <div class="hero-desc" style="margin-top:8px">${target ? (diff > 0 ? `距目标还差 ${diff.toFixed(1)} kg` : '已经到目标体重啦') : '还没有设定目标'}</div>
+      </div>
+      ${ring(target && first > target ? clamp((first - cur) / Math.max(first - target, 0.1) * 100) : 0, '目标进度')}
+    </div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('target', 'accent')} 目标 ${target || '—'} kg</span>
+      <span class="hero-chip">${icon('trend', 'mint')} 累计 ${changed > 0 ? '+' : ''}${changed.toFixed(1)} kg</span>
+    </div>
+  </section>
+
+  <div class="sec-title">体重趋势<span class="sec-note">最近 14 次</span></div>
+  <div class="card" style="padding:14px 10px 8px">${weightChart()}</div>
+
+  <div class="stats">
+    <div class="stat"><div class="s-v">${first.toFixed(1)}<small>kg</small></div><div class="s-k">起始</div></div>
+    <div class="stat"><div class="s-v">${cur.toFixed(1)}<small>kg</small></div><div class="s-k">当前</div></div>
+    <div class="stat"><div class="s-v">${recs.length}</div><div class="s-k">记录次数</div></div>
+  </div>
+
+  <div class="sec-title">记录今日体重</div>
+  <div class="card">
+    <div class="add-row" style="margin-top:0">
+      <input class="inp inp-sm" type="number" step="0.1" inputmode="decimal" data-in="weight-kg" data-enter="weight-add" placeholder="如 53.0" />
+      <span class="muted" style="flex:0 0 auto">kg</span>
+      <button class="btn btn-primary" data-act="weight-add">记录</button>
+    </div>
+    <div class="add-row">
+      <span class="muted" style="flex:0 0 auto">目标</span>
+      <input class="inp inp-sm" type="number" step="0.1" inputmode="decimal" value="${target || ''}" data-change="weight-target" placeholder="目标体重" />
+      <span class="muted" style="flex:0 0 auto">kg</span>
+    </div>
+  </div>
+
+  <div class="sec-title">历史记录<span class="sec-note">${list.length} 条</span></div>
+  ${list.length ? `<div class="rows">
+    ${list.map((r, i) => {
+      const prev = list[i + 1];
+      const d = prev ? (r.kg - prev.kg) : 0;
+      return `<div class="row-item">
+        <div class="r-main">
+          <span class="r-label">${r.kg.toFixed(1)} kg</span>
+          <span class="r-note">${esc(r.date)}${r.date === todayISO() ? ' · 今天' : ''}</span>
+        </div>
+        <span class="r-value ${d > 0 ? 'num-up' : d < 0 ? 'num-down' : ''}">${d ? (d > 0 ? '+' : '') + d.toFixed(1) : '—'}</span>
+        <button class="del" data-act="weight-del" data-id="${r.id}">${icon('x')}</button>
+      </div>`;
+    }).join('')}
+  </div>` : emptyState('⚖️', '还没有体重记录。')}`;
+}
+
+/* =========================================================
+   12. 页面：英语
+   ========================================================= */
+function renderEnglish() {
+  const e = state.english;
+  const pct = e.targetWords ? Math.round(e.words / e.targetWords * 100) : 0;
+  const tasksDone = e.tasks.filter(t => t.done).length;
+
+  return `
+  ${pageHead('英语学习', '每天 20 分钟，一年就是 120 小时')}
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-title">今日单词 ${e.words}/${e.targetWords}</div>
+        <div class="hero-desc">${e.words >= e.targetWords ? '今天达标了，很稳。' : '再背 ' + Math.max(e.targetWords - e.words, 0) + ' 个就达标。'}</div>
+      </div>
+      ${ring(pct, '单词目标')}
+    </div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('flame', 'pink')} 连续 ${streak()} 天</span>
+      <span class="hero-chip">${icon('check', 'mint')} 任务 ${tasksDone}/${e.tasks.length}</span>
+    </div>
+  </section>
+
+  <div class="sec-title">单词进度<span class="sec-note">目标 ${e.targetWords} 个 / 天</span></div>
+  <div class="card">
+    ${bar(pct)}
+    <div class="add-row" style="margin-top:14px">
+      <span class="muted" style="flex:0 0 auto">今日已背</span>
+      <button class="btn btn-ghost btn-round" data-act="eng-words" data-n="-5" aria-label="减五">${icon('minus')}</button>
+      <input class="inp inp-sm" type="number" inputmode="numeric" value="${e.words}" data-change="eng-words" style="text-align:center;width:72px;flex:0 0 auto" />
+      <button class="btn btn-primary btn-round" data-act="eng-words" data-n="5" aria-label="加五">${icon('plus')}</button>
+      <span class="muted" style="flex:0 0 auto">个</span>
+    </div>
+    <div class="add-row">
+      <span class="muted" style="flex:0 0 auto">每日目标</span>
+      <input class="inp inp-sm" type="number" inputmode="numeric" value="${e.targetWords}" data-change="eng-target" style="width:80px;flex:0 0 auto" />
+      <span class="muted" style="flex:0 0 auto">个</span>
+    </div>
+  </div>
+
+  <div class="sec-title">今日任务<span class="sec-note">${tasksDone}/${e.tasks.length} 完成</span></div>
+  <div class="rows" style="margin-top:0">
+    ${e.tasks.map(t => `<div class="row-item ${t.done ? 'r-done' : ''}">
+      <button class="cb ${t.done ? 'on' : ''}" data-act="eng-task" data-id="${t.id}">${t.done ? icon('check') : ''}</button>
+      <div class="r-main"><span class="r-label">${esc(t.text)}</span></div>
+    </div>`).join('')}
+  </div>
+
+  <div class="sec-title">我的单词本<span class="sec-note">${e.book.length} 个</span></div>
+  <div class="card">
+    ${e.book.length ? `<div class="rows" style="margin-top:0">
+      ${e.book.map(w => `<div class="row-item">
+        <div class="r-main">
+          <span class="r-label">${esc(w.word)}</span>
+          <span class="r-note">${esc(w.mean)}</span>
+        </div>
+        <button class="del" data-act="word-del" data-id="${w.id}">${icon('x')}</button>
+      </div>`).join('')}
+    </div>` : `<div class="muted">单词本还是空的，先收几个今天遇到的词。</div>`}
+    <div class="add-row">
+      <input class="inp inp-sm" data-in="word-new" placeholder="单词" style="flex:0 0 40%" />
+      <input class="inp inp-sm" data-in="word-mean" data-enter="word-add" placeholder="释义" />
+      <button class="btn btn-primary btn-round" data-act="word-add" aria-label="添加">${icon('plus')}</button>
+    </div>
+  </div>
+
+  <div class="sec-title">本周打卡<span class="sec-note">连续 ${streak()} 天</span></div>
+  ${weekStrip(d => !!state.days[d])}`;
+}
+
+/* =========================================================
+   13. 页面：自媒体
+   ========================================================= */
+function renderMedia() {
+  const posted = state.media.platforms.filter(p => p.posted).length;
+  const total = state.media.platforms.length;
+  const fans = sum(state.media.platforms.map(p => p.followers || 0));
+  const published = state.media.ideas.filter(i => i.stage === '已发布').length;
+
+  return `
+  ${pageHead('自媒体', '稳定的更新节奏，比爆款更可控')}
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-title">今日发布 ${posted}/${total} 个平台</div>
+        <div class="hero-desc">选题库还有 ${state.media.ideas.length - published} 条可发。</div>
+      </div>
+      ${ring(total ? Math.round(posted / total * 100) : 0, '今日发布')}
+    </div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('users', 'accent')} 总粉丝 ${fans.toLocaleString('zh-CN')}</span>
+      <span class="hero-chip">${icon('media', 'pink')} 已发布 ${published} 条</span>
+    </div>
+  </section>
+
+  <div class="sec-title">平台打卡<span class="sec-note">发布后点一下</span></div>
+  <div class="rows" style="margin-top:0">
+    ${state.media.platforms.map(p => `<div class="pf-row">
+      <span class="pf-ico">${p.emoji}</span>
+      <span class="pf-name">${esc(p.name)}</span>
+      <button class="chip mini ${p.posted ? 'on' : ''}" data-act="media-posted" data-id="${p.id}">${p.posted ? '已发布' : '未发布'}</button>
+      <div class="pf-edit">
+        <input class="inp inp-sm" type="number" inputmode="numeric" value="${p.followers}" data-change="media-fans" data-id="${p.id}" />
+        <span class="r-note" style="flex:0 0 auto">粉丝</span>
+      </div>
+    </div>`).join('')}
+  </div>
+
+  <div class="sec-title">选题库<span class="sec-note">${state.media.ideas.length} 条</span></div>
+  <div class="rows" style="margin-top:0">
+    ${state.media.ideas.map(i => `<div class="row-item">
+      <div class="r-main">
+        <span class="r-label">${esc(i.text)}</span>
+        <span class="r-note">${esc(i.stage)}</span>
+      </div>
+      <button class="chip mini ${i.stage === '已发布' ? 'on' : ''}" data-act="idea-stage" data-id="${i.id}">切换</button>
+      <button class="del" data-act="idea-del" data-id="${i.id}">${icon('x')}</button>
+    </div>`).join('')}
+  </div>
+  <div class="add-row">
+    <input class="inp" data-in="idea-new" data-enter="idea-add" placeholder="记一个选题灵感..." />
+    <button class="btn btn-primary" data-act="idea-add">添加</button>
+  </div>
+
+  <div class="sec-title">本周打卡<span class="sec-note">连续 ${streak()} 天</span></div>
+  ${weekStrip(d => !!state.days[d])}`;
+}
+
+/* =========================================================
+   14. 页面：视频
+   ========================================================= */
+const VIDEO_STAGES = ['选题', '脚本', '拍摄', '剪辑', '发布'];
+
+function renderVideo() {
+  const projects = state.video.projects;
+  const avgDone = projects.length
+    ? Math.round(sum(projects.map(p => VIDEO_STAGES.filter(s => p.stages[s]).length)) / (projects.length * VIDEO_STAGES.length) * 100)
+    : 0;
+  const watchDone = state.video.watch.filter(w => w.done).length;
+
+  return `
+  ${pageHead('视频', '把想法拆成镜头，就不那么吓人了')}
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-title">${projects.length} 个在做的项目</div>
+        <div class="hero-desc">今天剪辑 ${state.video.minutes} 分钟 · 待学 ${state.video.watch.length - watchDone} 条</div>
+      </div>
+      ${ring(avgDone, '项目进度')}
+    </div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('video', 'accent')} 平均完成 ${avgDone}%</span>
+      <span class="hero-chip">${icon('flame', 'pink')} 连续 ${streak()} 天</span>
+    </div>
+  </section>
+
+  <div class="sec-title">制作流水线<span class="sec-note">点一下推进一格</span></div>
+  ${projects.length ? `<div style="display:flex;flex-direction:column;gap:10px">
+    ${projects.map(p => {
+      const dn = VIDEO_STAGES.filter(s => p.stages[s]).length;
+      const pc = Math.round(dn / VIDEO_STAGES.length * 100);
+      return `<div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div class="r-label" style="font-weight:600">${esc(p.title)}</div>
+          <button class="del" data-act="project-del" data-id="${p.id}">${icon('x')}</button>
+        </div>
+        <div style="margin:12px 0 10px">${bar(pc)}</div>
+        <div class="chip-row" style="padding-bottom:0">
+          ${VIDEO_STAGES.map(s => `<button class="chip mini ${p.stages[s] ? 'on' : ''}" data-act="project-stage" data-id="${p.id}" data-stage="${s}">${s}</button>`).join('')}
+        </div>
+        <div class="r-note" style="margin-top:8px">${dn}/${VIDEO_STAGES.length} 步完成</div>
+      </div>`;
+    }).join('')}
+  </div>` : emptyState('🎬', '还没有在做的视频项目。')}
+
+  <div class="add-row">
+    <input class="inp" data-in="project-new" data-enter="project-add" placeholder="新建一个视频项目..." />
+    <button class="btn btn-primary" data-act="project-add">新建</button>
+  </div>
+
+  <div class="sec-title">今日剪辑<span class="sec-note">${state.video.minutes} 分钟</span></div>
+  <div class="card">
+    <div class="add-row" style="margin-top:0">
+      <button class="btn btn-ghost" data-act="video-min" data-n="10">+10 分钟</button>
+      <button class="btn btn-ghost" data-act="video-min" data-n="30">+30 分钟</button>
+      <button class="btn btn-ghost" data-act="video-min" data-n="-10">−10</button>
+    </div>
+  </div>
+
+  <div class="sec-title">待学习<span class="sec-note">${watchDone}/${state.video.watch.length}</span></div>
+  <div class="rows" style="margin-top:0">
+    ${state.video.watch.map(w => `<div class="row-item ${w.done ? 'r-done' : ''}">
+      <button class="cb ${w.done ? 'on' : ''}" data-act="watch-toggle" data-id="${w.id}">${w.done ? icon('check') : ''}</button>
+      <div class="r-main"><span class="r-label">${esc(w.text)}</span></div>
+      <button class="del" data-act="watch-del" data-id="${w.id}">${icon('x')}</button>
+    </div>`).join('')}
+  </div>
+  <div class="add-row">
+    <input class="inp" data-in="watch-new" data-enter="watch-add" placeholder="添加想学的视频/教程..." />
+    <button class="btn btn-primary" data-act="watch-add">添加</button>
+  </div>`;
+}
+
+/* =========================================================
+   15. 页面：穿搭
+   ========================================================= */
+const OUTFIT_MOODS = ['清爽', '温柔', '利落', '随性'];
+
+function renderOutfit() {
+  const t = todayISO();
+  const checkedToday = !!state.outfit.outfits[t];
+  const weekOn = Object.keys(state.outfit.outfits).length;
+  const cats = ['上衣', '下装', '外套', '鞋履', '配饰'];
+
+  return `
+  ${pageHead('穿搭', '先照顾好自己，再出门见世界')}
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-title">${checkedToday ? '今天已经搭配好啦' : '今天穿什么？'}</div>
+        <div class="hero-desc">衣橱 ${state.outfit.items.length} 件单品，也够搭出花了。</div>
+      </div>
+      ${ring(checkedToday ? 100 : 0, '今日打卡')}
+    </div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('shirt', 'pink')} 本周打卡 ${weekOn} 天</span>
+      <span class="hero-chip">${icon('sparkle', 'amber')} ${state.outfit.mood || '未记录心情'}</span>
+    </div>
+  </section>
+
+  <div class="sec-title">今日搭配<span class="sec-note">记录一下就很治愈</span></div>
+  <div class="card">
+    <input class="inp" data-change="outfit-note" value="${esc(state.outfit.note)}" placeholder="白衬衫 + 直筒牛仔裤 + 小白鞋" />
+    <div class="chip-row" style="margin-top:12px;padding-bottom:0">
+      ${OUTFIT_MOODS.map(m => `<button class="chip ${state.outfit.mood === m ? 'on' : ''}" data-act="outfit-mood" data-mood="${m}">${m}</button>`).join('')}
+    </div>
+    <div class="add-row">
+      <button class="btn btn-primary" data-act="outfit-check">${checkedToday ? icon('check') + ' 已完成打卡' : '完成今日打卡'}</button>
+    </div>
+  </div>
+
+  <div class="sec-title">衣橱清单<span class="sec-note">${state.outfit.items.length} 件</span></div>
+  ${cats.map(c => {
+    const items = state.outfit.items.filter(i => i.cat === c);
+    if (!items.length) return '';
+    return `<div class="card" style="margin-bottom:10px">
+      <div class="r-note" style="margin-bottom:10px">${c} · ${items.length} 件</div>
+      <div class="chip-row" style="padding-bottom:0">
+        ${items.map(i => `<button class="mini-chip" data-act="outfit-item-del" data-id="${i.id}">${esc(i.name)} ${icon('x')}</button>`).join('')}
+      </div>
+    </div>`;
+  }).join('')}
+  ${state.outfit.items.length ? '' : emptyState('👗', '衣橱还是空的，先加几件常穿的单品。')}
+  <div class="add-row">
+    <select class="inp inp-sm" data-in="item-cat" style="width:92px;flex:0 0 auto">
+      ${cats.map(c => `<option value="${c}">${c}</option>`).join('')}
+    </select>
+    <input class="inp inp-sm" data-in="item-new" data-enter="outfit-item-add" placeholder="单品名称，如：燕麦色卫衣" />
+    <button class="btn btn-primary btn-round" data-act="outfit-item-add" aria-label="添加">${icon('plus')}</button>
+  </div>
+
+  <div class="sec-title">本周穿搭<span class="sec-note">连续 ${streak()} 天</span></div>
+  ${weekStrip(d => !!state.outfit.outfits[d])}`;
+}
+
+/* =========================================================
+   16. 页面：旅行
+   ========================================================= */
+function renderTravel() {
+  const w = state.travel.wishes;
+  const visited = w.filter(x => x.done).length;
+  const prepDone = state.travel.todos.filter(t => t.done).length;
+
+  return `
+  ${pageHead('旅行', '把想去的远方，写成可以执行的清单')}
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="hero-txt">
+        <div class="hero-title">心愿目的地 ${w.length} 个</div>
+        <div class="hero-desc">已打卡 ${visited} 个 · 还有 ${w.length - visited} 个</div>
+      </div>
+      ${ring(w.length ? Math.round(visited / w.length * 100) : 0, '心愿进度')}
+    </div>
+    <div class="hero-chips">
+      <span class="hero-chip">${icon('pin', 'accent')} 去过 ${state.travel.cities} 座城市</span>
+      <span class="hero-chip">${icon('book', 'amber')} 行前准备 ${prepDone}/${state.travel.todos.length}</span>
+    </div>
+  </section>
+
+  <div class="sec-title">心愿清单<span class="sec-note">${visited}/${w.length} 已打卡</span></div>
+  <div class="rows" style="margin-top:0">
+    ${w.length ? w.map(x => `<div class="row-item ${x.done ? 'r-done' : ''}">
+      <button class="cb ${x.done ? 'on' : ''}" data-act="wish-done" data-id="${x.id}">${x.done ? icon('check') : ''}</button>
+      <div class="r-main">
+        <span class="r-label">${esc(x.place)}</span>
+        <span class="r-note">${esc(x.note || '')}</span>
+      </div>
+      <button class="del" data-act="wish-del" data-id="${x.id}">${icon('x')}</button>
+    </div>`).join('') : emptyState('✈️', '还没有心愿目的地。')}
+  </div>
+  <div class="add-row">
+    <input class="inp inp-sm" data-in="wish-place" placeholder="目的地" style="flex:0 0 38%" />
+    <input class="inp inp-sm" data-in="wish-note" data-enter="wish-add" placeholder="想在那里做什么" />
+    <button class="btn btn-primary btn-round" data-act="wish-add" aria-label="添加">${icon('plus')}</button>
+  </div>
+
+  <div class="sec-title">行前准备<span class="sec-note">${prepDone}/${state.travel.todos.length}</span></div>
+  <div class="rows" style="margin-top:0">
+    ${state.travel.todos.map(t => `<div class="row-item ${t.done ? 'r-done' : ''}">
+      <button class="cb ${t.done ? 'on' : ''}" data-act="travel-todo" data-id="${t.id}">${t.done ? icon('check') : ''}</button>
+      <div class="r-main"><span class="r-label">${esc(t.text)}</span></div>
+      <button class="del" data-act="travel-todo-del" data-id="${t.id}">${icon('x')}</button>
+    </div>`).join('')}
+  </div>
+  <div class="add-row">
+    <input class="inp" data-in="travel-todo-new" data-enter="travel-todo-add" placeholder="添加准备事项，如：订民宿" />
+    <button class="btn btn-primary" data-act="travel-todo-add">添加</button>
+  </div>
+
+  <div class="sec-title">旅行足迹</div>
+  <div class="card">
+    <div class="add-row" style="margin-top:0">
+      <span class="muted" style="flex:0 0 auto">去过的城市</span>
+      <input class="inp inp-sm" type="number" inputmode="numeric" value="${state.travel.cities}" data-change="travel-cities" style="width:84px" />
+      <span class="muted" style="flex:0 0 auto">座</span>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   17. 渲染调度
+   ========================================================= */
+const PAGES = [
+  { k: 'home', icon: 'home', name: '首页' },
+  { k: 'todo', icon: 'todo', name: '待办' },
+  { k: 'diet', icon: 'diet', name: '饮食' },
+  { k: 'finance', icon: 'wallet', name: '财务' },
+  { k: 'exercise', icon: 'sport', name: '运动' },
+  { k: 'posture', icon: 'posture', name: '体态' },
+  { k: 'weight', icon: 'scale', name: '体重' },
+  { k: 'english', icon: 'english', name: '英语' },
+  { k: 'media', icon: 'media', name: '自媒体' },
+  { k: 'video', icon: 'video', name: '视频' },
+  { k: 'outfit', icon: 'shirt', name: '穿搭' },
+  { k: 'travel', icon: 'plane', name: '旅行' }
+];
+
+const RENDER = {
+  home: () => (state.startedOn === todayISO() ? renderHome() : renderWelcome()),
+  todo: renderTodo,
+  diet: renderDiet,
+  finance: renderFinance,
+  exercise: renderExercise,
+  posture: renderPosture,
+  weight: renderWeight,
+  english: renderEnglish,
+  media: renderMedia,
+  video: renderVideo,
+  outfit: renderOutfit,
+  travel: renderTravel
+};
+
+function buildNav() {
+  document.getElementById('nav').innerHTML = PAGES.map(p =>
+    `<button class="nav-item ${ui.page === p.k ? 'active' : ''}" data-act="goto" data-page="${p.k}" aria-current="${ui.page === p.k ? 'page' : 'false'}">
+      ${icon(p.icon)}<span class="lbl">${p.name}</span>
+    </button>`).join('');
+}
+
+function render() {
+  const view = document.getElementById('view');
+  view.innerHTML = (RENDER[ui.page] || RENDER.home)();
+  document.querySelectorAll('.nav-item').forEach(n =>
+    n.classList.toggle('active', n.dataset.page === ui.page));
+  view.style.animation = 'none';
+  void view.offsetHeight;
+  view.style.animation = '';
+}
+
+/* =========================================================
+   18. 交互
+   ========================================================= */
+const $ = sel => document.querySelector(sel);
+const val = key => { const el = $('[data-in="' + key + '"]'); return el ? el.value.trim() : ''; };
+const clearIn = key => { const el = $('[data-in="' + key + '"]'); if (el) el.value = ''; };
+
+function openSheet(open) {
+  ui.sheetOpen = open;
+  if (!open) ui.resetArmed = false;
+  $('#mask').classList.toggle('show', open);
+  $('#sheet').classList.toggle('show', open);
+  renderSheet();
+}
+
+function renderSheet() {
+  $('#sheet').innerHTML = `<div class="sheet-inner">
+    <div class="sheet-grab"></div>
+    <div class="sheet-title">设置</div>
+    <button class="sheet-item" data-act="welcome-again"><span class="si-ico">${icon('sparkle')}</span><span class="si-txt">重新查看欢迎页</span><span class="si-arrow">${icon('arrow')}</span></button>
+    <button class="sheet-item danger" data-act="reset-data"><span class="si-ico">${icon('trash')}</span><span class="si-txt">${ui.resetArmed ? '再点一次，确认清空所有记录' : '清空全部数据（恢复初始示例）'}</span><span class="si-arrow">${icon('arrow')}</span></button>
+    <button class="sheet-item" data-act="close-settings"><span class="si-ico">${icon('x')}</span><span class="si-txt">关闭</span></button>
+  </div>`;
+}
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.textContent = msg;
+  el.style.cssText = 'position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:120;' +
+    'background:#1E293B;color:#fff;font-size:12.5px;font-weight:600;padding:11px 18px;border-radius:999px;' +
+    'border:2px solid #1E293B;box-shadow:4px 4px 0 0 rgba(226,232,240,.9);transition:opacity .3s,transform .3s;opacity:0';
+  document.body.appendChild(el);
+  requestAnimationFrame(() => { el.style.opacity = '1'; el.style.transform = 'translateX(-50%) translateY(-6px)'; });
+  setTimeout(() => {
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 320);
+  }, 1500);
+}
+
+function runAct(act, d) {
+  switch (act) {
+    /* ---- 导航 / 设置 ---- */
+    case 'goto': {
+      const p = d.page;
+      if (!p) return false;
+      ui.page = p;
+      try { history.replaceState(null, '', '#' + p); } catch (err) { /* file:// 下忽略 */ }
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      return true;
+    }
+    case 'open-settings': openSheet(true); return false;
+    case 'close-settings': openSheet(false); return false;
+    case 'welcome-again':
+      state.startedOn = null; save(); openSheet(false); ui.page = 'home';
+      window.scrollTo({ top: 0 }); return true;
+    case 'reset-data':
+      if (!ui.resetArmed) { ui.resetArmed = true; renderSheet(); return false; }
+      state = seedState(); save(); ui.page = 'home'; ui.resetArmed = false;
+      openSheet(false); toast('已恢复到初始示例数据'); return true;
+    case 'start':
+      state.startedOn = todayISO(); save(); window.scrollTo({ top: 0 }); return true;
+
+    /* ---- 待办 ---- */
+    case 'todo-cat': ui.todoCat = d.cat; return true;
+    case 'todo-status': ui.todoStatus = d.status; return true;
+    case 'todo-add': {
+      const text = val('todo');
+      if (!text) { toast('先写点什么吧'); return false; }
+      const cat = ui.todoCat === '全部' ? '个人' : ui.todoCat;
+      state.todos.unshift({ id: uid(), text, cat, done: false });
+      clearIn('todo'); save(); return true;
+    }
+    case 'todo-toggle': {
+      const t = state.todos.find(x => x.id === d.id);
+      if (t) { t.done = !t.done; if (t.done) touch(); save(); }
+      return true;
+    }
+    case 'todo-del':
+      state.todos = state.todos.filter(x => x.id !== d.id); save(); return true;
+    case 'todo-edit': {
+      const node = document.querySelector('[data-act="todo-edit"][data-id="' + d.id + '"]');
+      const t = state.todos.find(x => x.id === d.id);
+      if (!node || !t) return true;
+      const input = document.createElement('input');
+      input.className = 'inp inp-sm';
+      input.value = t.text;
+      node.replaceWith(input);
+      input.focus(); input.select();
+      const commit = () => {
+        const v = input.value.trim();
+        if (v) t.text = v;
+        save(); render();
+      };
+      input.addEventListener('blur', commit, { once: true });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { input.blur(); }
+        if (e.key === 'Escape') { input.value = t.text; input.blur(); }
+      });
+      return true;
+    }
+
+    /* ---- 饮食 ---- */
+    case 'water-set': state.diet.water = parseInt(d.n, 10) || 0; touch(); save(); return true;
+    case 'diet-add': {
+      const m = d.meal;
+      const food = val('food-' + m);
+      const kcal = num(val('kcal-' + m));
+      if (!food) { toast('先写下吃了什么'); return false; }
+      (state.diet.meals[m] = state.diet.meals[m] || []).push({ id: uid(), name: food, kcal: Math.round(kcal) });
+      clearIn('food-' + m); clearIn('kcal-' + m);
+      touch(); save(); return true;
+    }
+    case 'diet-del': {
+      const m = d.meal;
+      state.diet.meals[m] = (state.diet.meals[m] || []).filter(i => i.id !== d.id);
+      save(); return true;
+    }
+
+    /* ---- 财务 ---- */
+    case 'fin-type': ui.finType = d.type; return true;
+    case 'fin-add': {
+      const amount = num(val('fin-amount'));
+      if (!amount) { toast('金额要大于 0'); return false; }
+      const note = val('fin-note');
+      state.finance.tx.push({
+        id: uid(), type: ui.finType, cat: val('fin-cat') || '其他',
+        amount, note, date: todayISO()
+      });
+      clearIn('fin-amount'); clearIn('fin-note');
+      touch(); save(); return true;
+    }
+    case 'fin-del': state.finance.tx = state.finance.tx.filter(t => t.id !== d.id); save(); return true;
+
+    /* ---- 运动 ---- */
+    case 'morning-toggle': {
+      const m = state.morning.find(x => x.id === d.id);
+      if (m) { m.done = !m.done; if (m.done) touch(); save(); }
+      return true;
+    }
+    case 'morning-add': {
+      const text = val('morning-new');
+      if (!text) { toast('先写下这个习惯'); return false; }
+      state.morning.push({ id: uid(), text, kind: 'check', note: '', done: false });
+      clearIn('morning-new'); save(); return true;
+    }
+    case 'morning-del':
+      state.morning = state.morning.filter(x => x.id !== d.id); save(); return true;
+    case 'cardio': {
+      const items = state.cardio[d.g] || [];
+      const it = items.find(i => i.id === d.id);
+      if (it) { it.done = !it.done; if (it.done) touch(); save(); }
+      return true;
+    }
+    case 'cardio-add': {
+      const name = val('cardio-new');
+      const g = (($('[data-in="cardio-group"]') || {}).value) || ui.cardioGroup || '有氧';
+      if (!name) { toast('先写下运动名称'); return false; }
+      ui.cardioGroup = g;
+      (state.cardio[g] = state.cardio[g] || []).push({ id: uid(), name, done: false });
+      clearIn('cardio-new'); save(); return true;
+    }
+
+    /* ---- 体态 ---- */
+    case 'posture-toggle': {
+      const h = state.posture.habits.find(x => x.id === d.id);
+      if (h) {
+        if (state.posture.done[h.id]) delete state.posture.done[h.id];
+        else { state.posture.done[h.id] = true; touch(); }
+        save();
+      }
+      return true;
+    }
+    case 'posture-add': {
+      const text = val('posture-new');
+      if (!text) { toast('先写下动作名称'); return false; }
+      state.posture.habits.push({ id: uid(), text, note: '' });
+      clearIn('posture-new'); save(); return true;
+    }
+    case 'posture-del':
+      state.posture.habits = state.posture.habits.filter(x => x.id !== d.id); save(); return true;
+    case 'posture-mood': state.posture.mood = d.mood; save(); return true;
+
+    /* ---- 体重 ---- */
+    case 'weight-add': {
+      const kg = num(val('weight-kg'));
+      if (!kg || kg < 20 || kg > 200) { toast('请输入合理的体重'); return false; }
+      const t = todayISO();
+      const ex = state.weight.records.find(r => r.date === t);
+      if (ex) ex.kg = Math.round(kg * 10) / 10;
+      else state.weight.records.push({ id: uid(), date: t, kg: Math.round(kg * 10) / 10 });
+      clearIn('weight-kg'); touch(); save(); return true;
+    }
+    case 'weight-del':
+      state.weight.records = state.weight.records.filter(r => r.id !== d.id); save(); return true;
+
+    /* ---- 英语 ---- */
+    case 'eng-words': {
+      const n = parseInt(d.n, 10) || 0;
+      state.english.words = Math.max(0, state.english.words + n);
+      if (n > 0) touch();
+      save(); return true;
+    }
+    case 'eng-task': {
+      const t = state.english.tasks.find(x => x.id === d.id);
+      if (t) { t.done = !t.done; if (t.done) touch(); save(); }
+      return true;
+    }
+    case 'word-add': {
+      const word = val('word-new');
+      const mean = val('word-mean');
+      if (!word) { toast('先写下单词'); return false; }
+      state.english.book.push({ id: uid(), word, mean: mean || '待补充释义' });
+      clearIn('word-new'); clearIn('word-mean'); save(); return true;
+    }
+    case 'word-del':
+      state.english.book = state.english.book.filter(w => w.id !== d.id); save(); return true;
+
+    /* ---- 自媒体 ---- */
+    case 'media-posted': {
+      const p = state.media.platforms.find(x => x.id === d.id);
+      if (p) { p.posted = !p.posted; if (p.posted) touch(); save(); }
+      return true;
+    }
+    case 'idea-stage': {
+      const w = state.media.ideas.find(x => x.id === d.id);
+      if (w) {
+        const order = ['灵感', '待写', '已发布'];
+        w.stage = order[(order.indexOf(w.stage) + 1) % order.length];
+        if (w.stage === '已发布') touch();
+        save();
+      }
+      return true;
+    }
+    case 'idea-add': {
+      const text = val('idea-new');
+      if (!text) { toast('先写下灵感'); return false; }
+      state.media.ideas.unshift({ id: uid(), text, stage: '灵感' });
+      clearIn('idea-new'); save(); return true;
+    }
+    case 'idea-del':
+      state.media.ideas = state.media.ideas.filter(x => x.id !== d.id); save(); return true;
+
+    /* ---- 视频 ---- */
+    case 'project-stage': {
+      const p = state.video.projects.find(x => x.id === d.id);
+      if (p) {
+        p.stages[d.stage] = !p.stages[d.stage];
+        if (p.stages[d.stage]) touch();
+        save();
+      }
+      return true;
+    }
+    case 'project-add': {
+      const title = val('project-new');
+      if (!title) { toast('先写下项目名称'); return false; }
+      const stages = {};
+      VIDEO_STAGES.forEach(s => { stages[s] = false; });
+      state.video.projects.unshift({ id: uid(), title, stages });
+      clearIn('project-new'); save(); return true;
+    }
+    case 'project-del':
+      state.video.projects = state.video.projects.filter(p => p.id !== d.id); save(); return true;
+    case 'video-min': {
+      const n = parseInt(d.n, 10) || 0;
+      state.video.minutes = Math.max(0, state.video.minutes + n);
+      if (n > 0) touch();
+      save(); return true;
+    }
+    case 'watch-toggle': {
+      const w = state.video.watch.find(x => x.id === d.id);
+      if (w) { w.done = !w.done; save(); }
+      return true;
+    }
+    case 'watch-add': {
+      const text = val('watch-new');
+      if (!text) { toast('先写下想学的内容'); return false; }
+      state.video.watch.push({ id: uid(), text, done: false });
+      clearIn('watch-new'); save(); return true;
+    }
+    case 'watch-del':
+      state.video.watch = state.video.watch.filter(w => w.id !== d.id); save(); return true;
+
+    /* ---- 穿搭 ---- */
+    case 'outfit-check': {
+      const t = todayISO();
+      if (state.outfit.outfits[t]) { delete state.outfit.outfits[t]; }
+      else { state.outfit.outfits[t] = true; touch(); }
+      save(); return true;
+    }
+    case 'outfit-mood': state.outfit.mood = d.mood; save(); return true;
+    case 'outfit-item-add': {
+      const name = val('item-new');
+      const cat = (($('[data-in="item-cat"]') || {}).value) || '上衣';
+      if (!name) { toast('先写下单品名称'); return false; }
+      state.outfit.items.push({ id: uid(), name, cat });
+      clearIn('item-new'); save(); return true;
+    }
+    case 'outfit-item-del':
+      state.outfit.items = state.outfit.items.filter(i => i.id !== d.id); save(); return true;
+
+    /* ---- 旅行 ---- */
+    case 'wish-add': {
+      const place = val('wish-place');
+      if (!place) { toast('先写下目的地'); return false; }
+      state.travel.wishes.push({ id: uid(), place, note: val('wish-note'), done: false });
+      clearIn('wish-place'); clearIn('wish-note'); save(); return true;
+    }
+    case 'wish-done': {
+      const w = state.travel.wishes.find(x => x.id === d.id);
+      if (w) { w.done = !w.done; if (w.done) touch(); save(); }
+      return true;
+    }
+    case 'wish-del':
+      state.travel.wishes = state.travel.wishes.filter(x => x.id !== d.id); save(); return true;
+    case 'travel-todo': {
+      const t = state.travel.todos.find(x => x.id === d.id);
+      if (t) { t.done = !t.done; save(); }
+      return true;
+    }
+    case 'travel-todo-add': {
+      const text = val('travel-todo-new');
+      if (!text) { toast('先写下准备事项'); return false; }
+      state.travel.todos.push({ id: uid(), text, done: false });
+      clearIn('travel-todo-new'); save(); return true;
+    }
+    case 'travel-todo-del':
+      state.travel.todos = state.travel.todos.filter(t => t.id !== d.id); save(); return true;
+  }
+  return true;
+}
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  if (act === 'todo-edit') { runAct(act, el.dataset); return; }
+  runAct(act, el.dataset);
+  if (act === 'open-settings' || act === 'close-settings') return;
+  render();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const el = e.target.closest('[data-enter]');
+  if (!el) return;
+  e.preventDefault();
+  runAct(el.dataset.enter, el.dataset);
+  render();
+});
+
+document.addEventListener('change', e => {
+  const el = e.target.closest('[data-change]');
+  if (!el) return;
+  const kind = el.dataset.change;
+  const id = el.dataset.id;
+  switch (kind) {
+    case 'morning-time': {
+      const m = state.morning.find(x => x.id === id);
+      if (m) { m.time = el.value; m.done = true; touch(); save(); }
+      break;
+    }
+    case 'diet-target': state.diet.target = Math.max(0, Math.round(num(el.value))) || 1600; save(); break;
+    case 'fin-budget': state.finance.budget = Math.max(0, num(el.value)); save(); break;
+    case 'weight-target': state.weight.target = Math.max(0, num(el.value)); save(); break;
+    case 'eng-words': state.english.words = Math.max(0, parseInt(el.value, 10) || 0); save(); break;
+    case 'eng-target': state.english.targetWords = Math.max(1, parseInt(el.value, 10) || 20); save(); break;
+    case 'media-fans': {
+      const p = state.media.platforms.find(x => x.id === id);
+      if (p) { p.followers = Math.max(0, parseInt(el.value, 10) || 0); save(); }
+      break;
+    }
+    case 'outfit-note': state.outfit.note = el.value.trim(); save(); break;
+    case 'travel-cities': state.travel.cities = Math.max(0, parseInt(el.value, 10) || 0); save(); break;
+    default: return;
+  }
+  render();
+});
+
+/* 启动 */
+(function initRoute() {
+  const h = (location.hash || '').replace('#', '').trim();
+  if (h && RENDER[h]) ui.page = h;
+  if (h === 'welcome') state.startedOn = null;
+  if (h === 'start') state.startedOn = todayISO();
+})();
+buildNav();
+render();
+renderSheet();
+</script>
+</body>
+</html>
