@@ -333,8 +333,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .row-item .r-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
 .row-item .r-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .r-label{font-size:13.5px;font-weight:600;color:var(--fg);word-break:break-word}
+/* 可点击改名的文字：给一个可发现的暗示 */
+.r-label[data-act$="-edit"]{cursor:text;border-radius:5px}
+.r-label[data-act$="-edit"]:hover{text-decoration:underline dotted var(--soft);text-underline-offset:3px}
 .r-note{font-size:11px;color:var(--muted-fg);line-height:1.5}
-.r-value{font-size:13px;font-weight:800;color:var(--fg);font-variant-numeric:tabular-nums}
+.r-value{font-size:13px;font-weight:800;color:var(--fg);font-variant-numeric:tabular-nums;flex:0 0 auto;white-space:nowrap}
 .r-value.num-in{color:#047857}
 .r-value.num-out{color:var(--muted-fg)}
 .r-value.num-up{color:#B45309}
@@ -461,16 +464,19 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 @media (max-width:860px){.deco{display:none}}
 
 /* ===================== 运动页 ===================== */
-.cardio-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
-.c-card{
-  background:var(--card);border:var(--bw) solid var(--fg);border-radius:var(--r-md);
-  padding:12px 7px 10px;box-shadow:var(--sticker-sm);
-  display:flex;flex-direction:column;gap:9px;
+/* 每个训练分组一张卡片：动作可打卡 / 改名 / 删除 / 新增 */
+.cardio-stack{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.cg-head{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.cg-ico{
+  width:32px;height:32px;display:grid;place-items:center;font-size:15px;flex:0 0 auto;
+  border-radius:11px;border:var(--bw) solid var(--fg);background:var(--muted);
 }
-.c-head{display:flex;align-items:center;gap:6px;padding-bottom:7px;border-bottom:var(--bw-thin) dashed var(--border)}
-.c-ico{font-size:13px;line-height:1}
-.c-title{font-size:11.5px;font-weight:800;color:var(--fg);white-space:nowrap}
-.c-tags{display:flex;flex-wrap:wrap;gap:5px;flex:1 1 auto;align-content:flex-start}
+.cardio-group:nth-child(1) .cg-ico{background:#D1FAE5}
+.cardio-group:nth-child(2) .cg-ico{background:#EDE9FE}
+.cardio-group:nth-child(3) .cg-ico{background:#FEF3C7}
+.cg-title{flex:1 1 auto;font-size:14px;font-weight:800;color:var(--fg)}
+.cardio-group .row-item{padding:10px 12px}
+.cardio-group .add-row{margin-top:12px}
 .mini-chip{
   appearance:none;font-family:inherit;font-size:10.5px;font-weight:700;line-height:1.4;cursor:pointer;
   padding:4px 7px;border-radius:8px;border:var(--bw-thin) solid var(--fg);background:var(--card);
@@ -479,8 +485,27 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .mini-chip:hover{background:var(--muted)}
 .mini-chip.on{background:var(--quaternary);box-shadow:2px 2px 0 0 var(--fg)}
 .mini-chip .ic{width:11px;height:11px;stroke-width:3;vertical-align:-.12em;margin-left:2px}
-.c-foot{font-size:10px;font-weight:700;color:var(--muted-fg);text-align:center;padding-top:2px}
-.c-foot.on{color:var(--fg)}
+
+/* 营养素进度 */
+.macro-list{display:flex;flex-direction:column;gap:14px}
+.macro-item{display:flex;flex-direction:column;gap:7px}
+.macro-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.macro-name{font-size:11.5px;font-weight:800;color:var(--fg);letter-spacing:.02em}
+.macro-val{font-size:11px;font-weight:700;color:var(--muted-fg);font-variant-numeric:tabular-nums}
+.macro-val b{font-size:13.5px;font-weight:800;color:var(--fg);margin-right:2px}
+.bar.m-carb>i{background-color:#8B5CF6}
+.bar.m-fat>i{
+  background-color:#FBBF24;
+  background-image:repeating-linear-gradient(45deg,rgba(30,41,59,.14) 0 5px,transparent 5px 10px);
+}
+.bar.m-pro>i{background-color:#34D399}
+
+/* 目标输入的小网格 */
+.inp-xs{font-size:11.5px;padding:8px 9px;border-radius:9px}
+.target-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:10px}
+.tg{display:flex;flex-direction:column;gap:5px;min-width:0}
+.tg>span{font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--muted-fg)}
+.tg .inp{text-align:center;padding-left:6px;padding-right:6px}
 
 /* 饮水格 */
 .water-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;flex:1 1 auto}
@@ -608,11 +633,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .w-hi{font-size:29px}
   .halo{width:132px;height:132px;margin-bottom:26px}
   .w-btn{box-shadow:2px 2px 0 0 var(--fg)}
-  .cardio-grid{gap:7px}
-  .c-card{padding:11px 6px 9px}
+  .cardio-stack{gap:10px}
+  .cardio-group .row-item{padding:10px}
 }
 @media (max-width:370px){
-  .cardio-grid{grid-template-columns:1fr}
   .ring{width:66px;height:66px}
   .grid8{gap:6px}
   .gcell .gl{font-size:8.8px;white-space:normal}
@@ -771,11 +795,12 @@ function seedState() {
     },
     diet: {
       target: 1600,
+      macroTarget: { carb: 200, fat: 55, protein: 90 },
       water: 0,
       meals: {
         '早餐': [
-          { id: uid(), name: '燕麦牛奶', kcal: 260 },
-          { id: uid(), name: '水煮蛋', kcal: 80 }
+          { id: uid(), name: '燕麦牛奶', kcal: 260, carb: 38, fat: 6, protein: 12 },
+          { id: uid(), name: '水煮蛋', kcal: 80, carb: 1, fat: 5, protein: 7 }
         ],
         '午餐': [],
         '晚餐': [],
@@ -882,11 +907,45 @@ function load() {
     if (!raw) return seedState();
     const s = JSON.parse(raw);
     if (!s || s.v !== 1) return seedState();
-    const base = seedState();
-    return Object.assign(base, s);
+    return normalize(Object.assign(seedState(), s));
   } catch (e) {
     return seedState();
   }
+}
+
+/* 结构升级：补齐旧数据缺失的字段（营养素的碳水/脂肪/蛋白、运动分组、英语任务）
+   注意：此处不能引用第 3 节及之后的常量（load() 在它们初始化之前执行）。 */
+function normalize(s) {
+  s.diet = s.diet || {};
+  s.diet.meals = s.diet.meals || {};
+  s.diet.macroTarget = Object.assign({ carb: 200, fat: 55, protein: 90 }, s.diet.macroTarget || {});
+  ['早餐', '午餐', '晚餐', '加餐'].forEach(m => {
+    s.diet.meals[m] = (s.diet.meals[m] || []).map(i => ({
+      id: i.id || uid(),
+      name: i.name || '',
+      kcal: Math.round(+i.kcal || 0),
+      carb: Math.round(+i.carb || 0),
+      fat: Math.round(+i.fat || 0),
+      protein: Math.round(+i.protein || 0)
+    }));
+  });
+  s.cardio = s.cardio || {};
+  ['有氧', '无氧', '混氧HIIT'].forEach(g => {
+    s.cardio[g] = (s.cardio[g] || []).map(i => ({
+      id: i.id || uid(),
+      name: i.name || '未命名动作',
+      done: !!i.done
+    }));
+  });
+  s.english = s.english || {};
+  s.english.tasks = (s.english.tasks || []).map(t => ({
+    id: t.id || uid(),
+    text: t.text || '',
+    done: !!t.done
+  }));
+  if (!Array.isArray(s.morning)) s.morning = [];
+  if (!Array.isArray(s.todos)) s.todos = [];
+  return s;
 }
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* 存储不可用时静默降级 */ }
@@ -898,7 +957,6 @@ const ui = {
   todoCat: '全部',
   todoStatus: '全部',
   finType: '支出',
-  cardioGroup: '有氧',
   sheetOpen: false,
   resetArmed: false
 };
@@ -910,6 +968,8 @@ function rollover() {
   state.morning.forEach(m => { if (m.kind === 'check') m.done = false; });
   Object.keys(state.cardio).forEach(g => state.cardio[g].forEach(i => { i.done = false; }));
   state.diet.water = 0;
+  /* 饮食是「今日」记录：跨天清空，否则昨日的热量与营养素会算进今天 */
+  Object.keys(state.diet.meals).forEach(m => { state.diet.meals[m] = []; });
   state.english.words = 0;
   state.english.minutes = 0;
   state.english.tasks.forEach(t => { t.done = false; });
@@ -945,6 +1005,17 @@ const mealNames = ['早餐', '午餐', '晚餐', '加餐'];
 const mealCount = () => mealNames.filter(m => (state.diet.meals[m] || []).length > 0).length;
 const mealKcal = m => sum((state.diet.meals[m] || []).map(i => i.kcal || 0));
 const dietKcal = () => mealNames.reduce((a, m) => a + mealKcal(m), 0);
+
+/* 三大营养素：与热量同一套「摄入 / 目标」模型 */
+const MACROS = [
+  { k: 'carb', name: '碳水', unit: 'g', cls: 'm-carb' },
+  { k: 'fat', name: '脂肪', unit: 'g', cls: 'm-fat' },
+  { k: 'protein', name: '蛋白质', unit: 'g', cls: 'm-pro' }
+];
+const macroTarget = () => state.diet.macroTarget || { carb: 200, fat: 55, protein: 90 };
+const dietMacro = k => mealNames.reduce((a, m) =>
+  a + sum((state.diet.meals[m] || []).map(i => +i[k] || 0)), 0);
+const mealHasMacro = i => ['carb', 'fat', 'protein'].some(k => +i[k] > 0);
 const cardioAll = () => Object.values(state.cardio).flat();
 const cardioDone = () => cardioAll().filter(i => i.done).length;
 const postureDone = () => state.posture.habits.filter(h => state.posture.done[h.id]).length;
@@ -1149,6 +1220,24 @@ function renderDiet() {
     </div>
   </section>
 
+  <div class="sec-title">今日营养素<span class="sec-note">摄入 / 目标</span></div>
+  <div class="card">
+    <div class="macro-list">
+      ${MACROS.map(x => {
+        const v = dietMacro(x.k);
+        const tg = macroTarget()[x.k] || 0;
+        const mp = tg ? Math.round(v / tg * 100) : 0;
+        return `<div class="macro-item">
+          <div class="macro-top">
+            <span class="macro-name">${x.name}</span>
+            <span class="macro-val"><b>${v}</b>/ ${tg}${x.unit}</span>
+          </div>
+          ${bar(mp, x.cls)}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
   <div class="sec-title">饮水打卡<span class="sec-note">目标 8 杯</span></div>
   <div class="card">
     <div class="water-grid">
@@ -1170,24 +1259,39 @@ function renderDiet() {
     <div class="card">
       ${items.length ? `<div class="rows" style="margin-top:0">
         ${items.map(i => `<div class="row-item">
-          <div class="r-main"><span class="r-label">${esc(i.name)}</span></div>
-          <span class="r-value">${i.kcal} kcal</span>
+          <div class="r-main">
+            <span class="r-label">${esc(i.name)}</span>
+            ${mealHasMacro(i) ? `<span class="r-note">碳水 ${i.carb || 0} · 脂肪 ${i.fat || 0} · 蛋白 ${i.protein || 0}</span>` : ''}
+          </div>
+          <span class="r-value">${i.kcal || 0} kcal</span>
           <button class="del" data-act="diet-del" data-meal="${m}" data-id="${i.id}">${icon('x')}</button>
         </div>`).join('')}
       </div>` : `<div class="muted">这一餐还没记录。</div>`}
       <div class="add-row">
         <input class="inp inp-sm" data-in="food-${m}" data-enter="diet-add" data-meal="${m}" placeholder="吃了什么？" />
-        <input class="inp inp-sm" type="number" inputmode="numeric" data-in="kcal-${m}" placeholder="kcal" style="width:74px" />
+        <input class="inp inp-sm" type="number" inputmode="numeric" data-in="kcal-${m}" placeholder="kcal" style="width:72px" />
+      </div>
+      <div class="add-row" style="margin-top:8px">
+        <input class="inp inp-sm inp-xs" type="number" inputmode="numeric" data-in="carb-${m}" placeholder="碳水 g" />
+        <input class="inp inp-sm inp-xs" type="number" inputmode="numeric" data-in="fat-${m}" placeholder="脂肪 g" />
+        <input class="inp inp-sm inp-xs" type="number" inputmode="numeric" data-in="protein-${m}" placeholder="蛋白 g" />
         <button class="btn btn-primary btn-round" data-act="diet-add" data-meal="${m}" aria-label="添加">${icon('plus')}</button>
       </div>
     </div>`;
   }).join('')}
 
-  <div class="sec-title">热量目标<span class="sec-note">可自行调整</span></div>
+  <div class="sec-title">营养目标<span class="sec-note">可自行调整</span></div>
   <div class="card">
     <div class="add-row" style="margin-top:0">
+      <span class="muted" style="flex:0 0 auto">热量</span>
       <input class="inp inp-sm" type="number" inputmode="numeric" value="${target}" data-change="diet-target" />
       <span class="muted" style="flex:0 0 auto">kcal / 天</span>
+    </div>
+    <div class="target-grid">
+      ${MACROS.map(x => `<label class="tg">
+        <span>${x.name} ${x.unit}</span>
+        <input class="inp inp-sm" type="number" inputmode="numeric" value="${macroTarget()[x.k] || 0}" data-change="diet-macro-target" data-k="${x.k}" />
+      </label>`).join('')}
     </div>
   </div>`;
 }
@@ -1358,27 +1462,33 @@ function renderExercise() {
     <button class="btn btn-primary" data-act="morning-add">添加</button>
   </div>
 
-  <div class="sec-title">今日有氧打卡<span class="sec-note">点一下就算完成</span></div>
-  <div class="cardio-grid">
+  <div class="sec-title">今日运动打卡<span class="sec-note">勾选算一次 · 点名称可改名</span></div>
+  <div class="cardio-stack">
     ${Object.keys(state.cardio).map(g => {
       const items = state.cardio[g];
       const done = items.filter(i => i.done).length;
       const ico = g === '有氧' ? '🏃' : g === '无氧' ? '🏋️' : '⚡';
-      return `<div class="c-card">
-        <div class="c-head"><span class="c-ico">${ico}</span><span class="c-title">${g}</span></div>
-        <div class="c-tags">
-          ${items.map(i => `<button class="mini-chip ${i.done ? 'on' : ''}" data-act="cardio" data-g="${g}" data-id="${i.id}">${esc(i.name)}</button>`).join('')}
+      return `<div class="card cardio-group">
+        <div class="cg-head">
+          <span class="cg-ico">${ico}</span>
+          <span class="cg-title">${g}</span>
+          <span class="sec-note">${done}/${items.length}</span>
         </div>
-        <div class="c-foot ${done ? 'on' : ''}">${done ? '已打卡 ' + done + '/' + items.length : '点击打卡'}</div>
+        ${items.length ? `<div class="rows" style="margin-top:0">
+          ${items.map(i => `<div class="row-item ${i.done ? 'r-done' : ''}">
+            <button class="cb ${i.done ? 'on' : ''}" data-act="cardio" data-g="${g}" data-id="${i.id}">${i.done ? icon('check') : ''}</button>
+            <div class="r-main">
+              <span class="r-label" data-act="cardio-edit" data-g="${g}" data-id="${i.id}">${esc(i.name)}</span>
+            </div>
+            <button class="del" data-act="cardio-del" data-g="${g}" data-id="${i.id}">${icon('x')}</button>
+          </div>`).join('')}
+        </div>` : `<div class="muted">这一组还没有动作，在下面加一个。</div>`}
+        <div class="add-row">
+          <input class="inp inp-sm" data-in="cardio-new-${g}" data-enter="cardio-add" data-g="${g}" placeholder="添加本组动作" />
+          <button class="btn btn-primary btn-round" data-act="cardio-add" data-g="${g}" aria-label="添加">${icon('plus')}</button>
+        </div>
       </div>`;
     }).join('')}
-  </div>
-  <div class="add-row">
-    <select class="inp inp-sm" data-in="cardio-group" style="width:104px;flex:0 0 auto">
-      ${Object.keys(state.cardio).map(g => `<option value="${g}" ${ui.cardioGroup === g ? 'selected' : ''}>${g}</option>`).join('')}
-    </select>
-    <input class="inp inp-sm" data-in="cardio-new" data-enter="cardio-add" placeholder="添加自定义运动" />
-    <button class="btn btn-primary btn-round" data-act="cardio-add" aria-label="添加">${icon('plus')}</button>
   </div>
 
   <div class="sec-title">本周打卡<span class="sec-note">连续 ${streak()} 天</span></div>
@@ -1590,11 +1700,18 @@ function renderEnglish() {
   </div>
 
   <div class="sec-title">今日任务<span class="sec-note">${tasksDone}/${e.tasks.length} 完成</span></div>
-  <div class="rows" style="margin-top:0">
+  ${e.tasks.length ? `<div class="rows" style="margin-top:0">
     ${e.tasks.map(t => `<div class="row-item ${t.done ? 'r-done' : ''}">
       <button class="cb ${t.done ? 'on' : ''}" data-act="eng-task" data-id="${t.id}">${t.done ? icon('check') : ''}</button>
-      <div class="r-main"><span class="r-label">${esc(t.text)}</span></div>
+      <div class="r-main">
+        <span class="r-label" data-act="eng-task-edit" data-id="${t.id}">${esc(t.text)}</span>
+      </div>
+      <button class="del" data-act="eng-task-del" data-id="${t.id}">${icon('x')}</button>
     </div>`).join('')}
+  </div>` : `<div class="muted">还没有任务，先加一条今天想完成的事。</div>`}
+  <div class="add-row">
+    <input class="inp" data-in="eng-task-new" data-enter="eng-task-add" placeholder="添加任务，如：精听 1 段播客" />
+    <button class="btn btn-primary" data-act="eng-task-add">添加</button>
   </div>
 
   <div class="sec-title">我的单词本<span class="sec-note">${e.book.length} 个</span></div>
@@ -1971,6 +2088,30 @@ function toast(msg) {
   }, 1500);
 }
 
+/* 行内改名：把文本换成输入框，回车/失焦提交，Esc 取消 */
+function inlineEdit(node, current, commit) {
+  if (!node) return;
+  const input = document.createElement('input');
+  input.className = 'inp inp-sm';
+  input.value = current;
+  node.replaceWith(input);
+  input.focus();
+  input.select();
+  let closed = false;
+  const finish = keep => {
+    if (closed) return;
+    closed = true;
+    const v = input.value.trim();
+    if (keep && v && v !== current) { commit(v); save(); }
+    render();
+  };
+  input.addEventListener('blur', () => finish(true), { once: true });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closed = true; render(); }
+  });
+}
+
 function runAct(act, d) {
   switch (act) {
     /* ---- 导航 / 设置 ---- */
@@ -2012,25 +2153,10 @@ function runAct(act, d) {
     case 'todo-del':
       state.todos = state.todos.filter(x => x.id !== d.id); save(); return true;
     case 'todo-edit': {
-      const node = document.querySelector('[data-act="todo-edit"][data-id="' + d.id + '"]');
       const t = state.todos.find(x => x.id === d.id);
-      if (!node || !t) return true;
-      const input = document.createElement('input');
-      input.className = 'inp inp-sm';
-      input.value = t.text;
-      node.replaceWith(input);
-      input.focus(); input.select();
-      const commit = () => {
-        const v = input.value.trim();
-        if (v) t.text = v;
-        save(); render();
-      };
-      input.addEventListener('blur', commit, { once: true });
-      input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { input.blur(); }
-        if (e.key === 'Escape') { input.value = t.text; input.blur(); }
-      });
-      return true;
+      const node = document.querySelector('[data-act="todo-edit"][data-id="' + d.id + '"]');
+      if (t) inlineEdit(node, t.text, v => { t.text = v; });
+      return false;
     }
 
     /* ---- 饮食 ---- */
@@ -2038,10 +2164,13 @@ function runAct(act, d) {
     case 'diet-add': {
       const m = d.meal;
       const food = val('food-' + m);
-      const kcal = num(val('kcal-' + m));
       if (!food) { toast('先写下吃了什么'); return false; }
-      (state.diet.meals[m] = state.diet.meals[m] || []).push({ id: uid(), name: food, kcal: Math.round(kcal) });
-      clearIn('food-' + m); clearIn('kcal-' + m);
+      const n = k => Math.round(num(val(k + '-' + m)));
+      (state.diet.meals[m] = state.diet.meals[m] || []).push({
+        id: uid(), name: food,
+        kcal: n('kcal'), carb: n('carb'), fat: n('fat'), protein: n('protein')
+      });
+      ['food', 'kcal', 'carb', 'fat', 'protein'].forEach(k => clearIn(k + '-' + m));
       touch(); save(); return true;
     }
     case 'diet-del': {
@@ -2086,12 +2215,21 @@ function runAct(act, d) {
       return true;
     }
     case 'cardio-add': {
-      const name = val('cardio-new');
-      const g = (($('[data-in="cardio-group"]') || {}).value) || ui.cardioGroup || '有氧';
-      if (!name) { toast('先写下运动名称'); return false; }
-      ui.cardioGroup = g;
-      (state.cardio[g] = state.cardio[g] || []).push({ id: uid(), name, done: false });
-      clearIn('cardio-new'); save(); return true;
+      const list = state.cardio[d.g];
+      if (!list) return false;
+      const name = val('cardio-new-' + d.g);
+      if (!name) { toast('先写下动作名称'); return false; }
+      list.push({ id: uid(), name, done: false });
+      clearIn('cardio-new-' + d.g); save(); return true;
+    }
+    case 'cardio-del':
+      if (state.cardio[d.g]) state.cardio[d.g] = state.cardio[d.g].filter(i => i.id !== d.id);
+      save(); return true;
+    case 'cardio-edit': {
+      const item = (state.cardio[d.g] || []).find(i => i.id === d.id);
+      const node = document.querySelector('[data-act="cardio-edit"][data-id="' + d.id + '"]');
+      if (item) inlineEdit(node, item.name, v => { item.name = v; });
+      return false;
     }
 
     /* ---- 体态 ---- */
@@ -2138,6 +2276,20 @@ function runAct(act, d) {
       const t = state.english.tasks.find(x => x.id === d.id);
       if (t) { t.done = !t.done; if (t.done) touch(); save(); }
       return true;
+    }
+    case 'eng-task-add': {
+      const text = val('eng-task-new');
+      if (!text) { toast('先写下任务内容'); return false; }
+      state.english.tasks.push({ id: uid(), text, done: false });
+      clearIn('eng-task-new'); save(); return true;
+    }
+    case 'eng-task-del':
+      state.english.tasks = state.english.tasks.filter(t => t.id !== d.id); save(); return true;
+    case 'eng-task-edit': {
+      const t = state.english.tasks.find(x => x.id === d.id);
+      const node = document.querySelector('[data-act="eng-task-edit"][data-id="' + d.id + '"]');
+      if (t) inlineEdit(node, t.text, v => { t.text = v; });
+      return false;
     }
     case 'word-add': {
       const word = val('word-new');
@@ -2267,8 +2419,9 @@ document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
   const act = el.dataset.act;
-  if (act === 'todo-edit') { runAct(act, el.dataset); return; }
   runAct(act, el.dataset);
+  /* 行内改名会自己接管渲染（标签已被换成输入框） */
+  if (act.endsWith('-edit')) return;
   if (act === 'open-settings' || act === 'close-settings') return;
   render();
 });
@@ -2294,6 +2447,15 @@ document.addEventListener('change', e => {
       break;
     }
     case 'diet-target': state.diet.target = Math.max(0, Math.round(num(el.value))) || 1600; save(); break;
+    case 'diet-macro-target': {
+      const k = el.dataset.k;
+      if (k) {
+        state.diet.macroTarget = state.diet.macroTarget || {};
+        state.diet.macroTarget[k] = Math.max(0, Math.round(num(el.value)));
+        save();
+      }
+      break;
+    }
     case 'fin-budget': state.finance.budget = Math.max(0, num(el.value)); save(); break;
     case 'weight-target': state.weight.target = Math.max(0, num(el.value)); save(); break;
     case 'eng-words': state.english.words = Math.max(0, parseInt(el.value, 10) || 0); save(); break;
